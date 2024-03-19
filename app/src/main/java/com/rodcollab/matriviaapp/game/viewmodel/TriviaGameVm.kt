@@ -6,7 +6,6 @@ import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,7 +62,8 @@ class TriviaGameVm @Inject constructor(
                 questions = questions,
                 currentQuestion = currentQuestion,
                 optionsAnswers = optionsAnswers,
-                isLoading = false
+                isLoading = false,
+                currentState = GameStatus.STARTED
             )
         }
     }
