@@ -7,13 +7,17 @@ data class QuestionType(
     val type: Int
 )
 
-internal val types: List<QuestionType> = listOf(
+internal val types = arrayListOf(
     QuestionType(
         id = 0,
-        type = R.string.type_multiple
+        type = R.string.default_value
     ),
     QuestionType(
         id = 1,
+        type = R.string.type_multiple
+    ),
+    QuestionType(
+        id = 2,
         type = R.string.type_boolean
     )
 )

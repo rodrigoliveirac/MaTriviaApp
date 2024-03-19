@@ -7,17 +7,21 @@ data class QuestionDifficulty(
     val difficulty: Int
 )
 
-internal val difficulties = listOf(
+internal val difficulties = arrayListOf(
     QuestionDifficulty(
         id = 0,
-        difficulty = R.string.difficulty_easy
+        difficulty = R.string.default_value
     ),
     QuestionDifficulty(
         id = 1,
-        difficulty = R.string.difficulty_medium
+        difficulty = R.string.difficulty_easy
     ),
     QuestionDifficulty(
         id = 2,
+        difficulty = R.string.difficulty_medium
+    ),
+    QuestionDifficulty(
+        id = 3,
         difficulty = R.string.difficulty_hard
     )
 )
