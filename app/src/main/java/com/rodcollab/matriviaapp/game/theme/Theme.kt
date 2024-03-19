@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.ui.theme
+package com.rodcollab.matriviaapp.game.theme
 
 import android.app.Activity
 import android.os.Build

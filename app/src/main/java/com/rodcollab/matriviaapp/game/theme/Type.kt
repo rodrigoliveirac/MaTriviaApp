@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.ui.theme
+package com.rodcollab.matriviaapp.game.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
