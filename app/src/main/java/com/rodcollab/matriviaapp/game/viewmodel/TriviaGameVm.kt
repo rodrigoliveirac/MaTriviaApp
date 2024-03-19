@@ -56,9 +56,10 @@ class TriviaGameVm @Inject constructor(
         _uiState.update {
             it.copy(isLoading = true)
         }
-        val (questions, currentQuestion, optionsAnswers) = getNewQuestions()
+        val (questions, currentQuestion, optionsAnswers) = getNewQuestion()
         _uiState.update { triviaGameState ->
             triviaGameState.copy(
+                isCorrectOrIncorrect = null,
                 questions = questions,
                 currentQuestion = currentQuestion,
                 optionsAnswers = optionsAnswers,
@@ -67,22 +68,34 @@ class TriviaGameVm @Inject constructor(
         }
     }
 
-    private suspend fun getNewQuestions(): Triple<List<Question>, Question, List<AnswerOptionsUiModel>> {
-        val questions = gameUseCases.getQuestion.invoke()
-        val currentQuestion = questions.last()
-        val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
-            AnswerOptionsUiModel(
-                id = answerOption.id,
-                option = answerOption.answer,
-            )
+    private suspend fun getNewQuestion(): Triple<List<Question>, Question, List<AnswerOptionsUiModel>> {
+        return if(_uiState.value.questions.isEmpty()) {
+            val questions = gameUseCases.getQuestion.invoke()
+            val currentQuestion = questions.last()
+            val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+                AnswerOptionsUiModel(
+                    id = answerOption.id,
+                    option = answerOption.answer,
+                )
+            }
+            Triple(questions, currentQuestion, optionsAnswers)
+        } else {
+            val questions = _uiState.value.questions.toMutableList()
+            questions.remove(_uiState.value.currentQuestion)
+            val currentQuestion = questions.last()
+            val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+                AnswerOptionsUiModel(
+                    id = answerOption.id,
+                    option = answerOption.answer,
+                )
+            }
+            Triple(questions, questions.last(), optionsAnswers)
         }
-        return Triple(questions, currentQuestion, optionsAnswers)
     }
 
     fun confirmAnswer(answerId:Int) {
         viewModelScope.launch {
-            val questions = _uiState.value.questions.toMutableList()
-            questions.remove(_uiState.value.currentQuestion)
+
             when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,answerId)) {
                 true -> _uiState.update { triviaGameState ->
                     val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
@@ -96,14 +109,7 @@ class TriviaGameVm @Inject constructor(
                     }
                 }
             }
-            if (questions.isEmpty()) {
-                initGameOrContinueWithNewQuestions()
-            } else {
-                delay(ONE_SECOND)
-                _uiState.update { triviaGameState ->
-                    triviaGameState.copy(isCorrectOrIncorrect = null, currentQuestion = questions.last())
-                }
-            }
+            initGameOrContinueWithNewQuestions()
         }
     }
 
