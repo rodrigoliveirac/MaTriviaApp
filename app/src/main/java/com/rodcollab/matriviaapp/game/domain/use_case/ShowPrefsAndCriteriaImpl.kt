@@ -25,7 +25,7 @@ class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val
                             categories.add(category)
                         }
                         if(categories.find { it.id == 0 } == null) {
-                            categories.add(Category(id = 0, name = GetCategoriesImpl.defaultValue))
+                            categories.add(Category(id = 0, name = defaultValue))
                         }
                         categories
                     }.await()
@@ -55,5 +55,9 @@ class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val
     private fun getQuestionCategoryFromId(id: Int) : Category {
          val category = categories.indexOfFirst { it.id == id }
          return categories[category]
+    }
+
+    companion object {
+        private const val defaultValue = ""
     }
 }

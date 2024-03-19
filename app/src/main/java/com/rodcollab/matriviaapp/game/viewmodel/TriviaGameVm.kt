@@ -12,28 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-enum class GameStatus {
-    PREP,
-    STARTED,
-    ENDED
-}
-data class TriviaGameState(
-    val correctAnswers: Int = 0,
-    val currentState: GameStatus = GameStatus.PREP,
-    val questions: List<Question> = listOf(),
-    val currentQuestion: Question? = null,
-    val currentCorrectAnswerId: Int? = null,
-    val isCorrectOrIncorrect: Boolean? = null,
-    val optionsAnswers: List<AnswerOptionsUiModel> = listOf(),
-    val isLoading: Boolean = false
-)
-
-data class AnswerOptionsUiModel(
-    val id: Int,
-    val option: String,
-    val highlight: Boolean = false
-)
 @HiltViewModel
 class TriviaGameVm @Inject constructor(
     private val preferences: Preferences,
