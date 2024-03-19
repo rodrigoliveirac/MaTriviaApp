@@ -5,7 +5,7 @@ import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.domain.use_case.GetQuestionImpl
 import com.rodcollab.matriviaapp.game.domain.use_case.QuestionValidatorImpl
-import com.rodcollab.matriviaapp.game.domain.use_case.ShowPrefsImpl
+import com.rodcollab.matriviaapp.game.domain.use_case.ShowPrefsAndCriteriaImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,7 +24,7 @@ object GameDomainModule {
     ): GameUseCases {
         return GameUseCases(
             getQuestion = GetQuestionImpl(preferences,repository),
-            showPrefs = ShowPrefsImpl(preferences,repository),
+            showPrefsAndCriteria = ShowPrefsAndCriteriaImpl(preferences, repository),
             questionValidator = QuestionValidatorImpl()
         )
     }
