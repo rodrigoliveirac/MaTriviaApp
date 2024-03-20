@@ -14,4 +14,7 @@
     <string name="your_time_is_up">Your time is up.</string>
     <string name="play_again">Play again</string>
     <string name="back_to_game_setup">Back to Game Setup</string>
+    <string name="end_of_game">End of game</string>
+    <string name="correct_answers">Correct Answers:</string>
+    <string name="game_setup">Game Setup</string>
 </resources>

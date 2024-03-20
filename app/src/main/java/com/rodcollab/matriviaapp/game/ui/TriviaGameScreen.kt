@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.TimerActions
-import com.rodcollab.matriviaapp.game.ui.components.GameEndedDialog
+import com.rodcollab.matriviaapp.game.ui.components.EndOfGameDialog
 import com.rodcollab.matriviaapp.game.ui.components.PlayingScreen
 import com.rodcollab.matriviaapp.game.ui.components.PrepareGameDialog
 import com.rodcollab.matriviaapp.game.ui.components.SnackBar
@@ -75,7 +75,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     }
                 }
                 else -> {
-                    GameEndedDialog(
+                    EndOfGameDialog(
                         uiState = uiState
                     ) { endGameAction ->
                         viewModel.onEndGameActions(endGameAction)
