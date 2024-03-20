@@ -222,6 +222,9 @@ class TriviaGameVm @Inject constructor(
                 initGameOrContinueWithNewQuestions()
             }
             else -> {
+
+                insertRanking()
+
                 _uiState.update { triviaGameState ->
                     val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
                     triviaGameState.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
@@ -243,6 +246,11 @@ class TriviaGameVm @Inject constructor(
                 _timeState.update { null }
             }
         }
+    }
+
+    private suspend fun insertRanking() {
+        val correctAnswers = _uiState.value.correctAnswers
+        gameUseCases.insertRanking(correctAnswers)
     }
 
     private fun selectOption(selectedId: Int) {
@@ -291,6 +299,7 @@ class TriviaGameVm @Inject constructor(
     }
 
     private suspend fun updateStatusGamerOver() {
+        insertRanking()
         delay(ONE_SECOND)
         _uiState.update {
             it.copy(
