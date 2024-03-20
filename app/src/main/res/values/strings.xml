@@ -17,4 +17,8 @@
     <string name="end_of_game">End of game</string>
     <string name="correct_answers">Correct Answers:</string>
     <string name="game_setup">Game Setup</string>
+    <string name="question">Question %1$s</string>
+    <string name="yes">YES</string>
+    <string name="no">NO</string>
+    <string name="are_you_sure_that_you_want_to_give_up">Are you sure that you want to give up?</string>
 </resources>

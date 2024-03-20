@@ -21,7 +21,7 @@ import com.rodcollab.matriviaapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarGame(onHeightValue:(Dp)-> Unit) {
+fun TopBarGame(onHeightValue:(Dp)-> Unit, onTopBarAskToGiveUp: () -> Unit) {
     val density = LocalDensity.current
     CenterAlignedTopAppBar(modifier = Modifier
         .shadow(elevation = 6.dp)
@@ -32,7 +32,7 @@ fun TopBarGame(onHeightValue:(Dp)-> Unit) {
         },title = {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(textAlign = TextAlign.Center, modifier = Modifier.weight(1f),text = stringResource(id = R.string.app_name))
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = { onTopBarAskToGiveUp() }) {
                 Icon(painter = painterResource(id = R.drawable.baseline_exit_to_app_24), contentDescription = null)
             }
         }

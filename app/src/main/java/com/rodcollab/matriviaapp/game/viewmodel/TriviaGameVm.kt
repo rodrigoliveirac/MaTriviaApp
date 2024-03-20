@@ -10,6 +10,7 @@ import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
+import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
 import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.intent.TimerActions
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -62,7 +63,8 @@ class TriviaGameVm @Inject constructor(
                 isLoading = false,
                 currentState = GameStatus.STARTED,
                 currentOptionIdSelected = null,
-                timeIsFinished = false
+                timeIsFinished = false,
+                confirmWithdrawal = false
             )
         }
         _timeState.update { INITIAL_TIME_VALUE }
@@ -311,11 +313,34 @@ class TriviaGameVm @Inject constructor(
             when(endGameAction) {
                 is EndGameActions.BackToGameSetup -> {
                     _uiState.update { gameState ->
-                        gameState.copy(currentState = GameStatus.PREP)
+                        gameState.copy(currentState = GameStatus.SETUP)
                     }
                 }
                 is EndGameActions.PlayAgain -> {
                     initGameOrContinueWithNewQuestions()
+                }
+            }
+        }
+    }
+
+    fun onTopBarGiveUpGame() {
+        viewModelScope.launch {
+            _uiState.update { triviaGameState ->
+                triviaGameState.copy(confirmWithdrawal = !triviaGameState.confirmWithdrawal)
+            }
+        }
+    }
+
+    fun onGiveUpGameAction(giveUpGameActions: GiveUpGameActions) {
+        viewModelScope.launch {
+            when(giveUpGameActions) {
+                is GiveUpGameActions.Confirm -> {
+                    updateStatusGamerOver()
+                }
+                is GiveUpGameActions.GoBack -> {
+                    _uiState.update { triviaGameState ->
+                        triviaGameState.copy(confirmWithdrawal = !triviaGameState.confirmWithdrawal)
+                    }
                 }
             }
         }

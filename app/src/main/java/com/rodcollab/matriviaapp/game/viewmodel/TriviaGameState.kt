@@ -7,7 +7,7 @@ import com.rodcollab.matriviaapp.game.domain.Question
 
 data class TriviaGameState(
     val correctAnswers: Int = 0,
-    val currentState: GameStatus = GameStatus.PREP,
+    val currentState: GameStatus = GameStatus.SETUP,
     val questions: List<Question> = listOf(),
     val currentQuestion: Question? = null,
     val currentCorrectAnswerId: Int? = null,
@@ -16,7 +16,8 @@ data class TriviaGameState(
     val isLoading: Boolean = false,
     val criteriaFields: GameCriteriaUiModel? = GameCriteriaUiModel(),
     val currentOptionIdSelected: Int? = null,
-    val timeIsFinished: Boolean = false
+    val timeIsFinished: Boolean = false,
+    val confirmWithdrawal: Boolean = false
 ) {
     val numberQuestion = correctAnswers + 1
 }

@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.TimerActions
+import com.rodcollab.matriviaapp.game.ui.components.ConfirmWithdrawalDialog
 import com.rodcollab.matriviaapp.game.ui.components.EndOfGameDialog
 import com.rodcollab.matriviaapp.game.ui.components.PlayingScreen
 import com.rodcollab.matriviaapp.game.ui.components.PrepareGameDialog
@@ -56,7 +57,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
 
     Scaffold(
         topBar = {
-            TopBarGame(onHeightValue = { heightTopBar = it })
+            TopBarGame(onHeightValue = { heightTopBar = it }) { viewModel.onTopBarGiveUpGame() }
         },
         snackbarHost = { SnackBar(
                 heightTopBar = heightTopBar,
@@ -64,7 +65,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                 snackbarHostState = snackbarHostState)
         }) {  paddingValues ->
             when(uiState.currentState) {
-                GameStatus.PREP -> {
+                GameStatus.SETUP -> {
                     uiState.criteriaFields?.let { criteriaFields ->
                         PrepareGameDialog(criteriaFields) { viewModel.onActionMenuGame(it) }
                     }
@@ -87,8 +88,11 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
             }
-
+        if (uiState.confirmWithdrawal) {
+            ConfirmWithdrawalDialog { viewModel.onGiveUpGameAction(it) }
+        }
     }
+
 
     LaunchSnackBar(uiState, snackbarHostState)
     timeState?.let { time ->

@@ -1,7 +1,7 @@
 package com.rodcollab.matriviaapp.game.viewmodel
 
 enum class GameStatus {
-    PREP,
+    SETUP,
     STARTED,
     ENDED
 }

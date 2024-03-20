@@ -29,7 +29,9 @@ import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 
 @Composable
 fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaGameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
-    Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues)) {
         timeState?.let { time ->
             Text(modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -44,7 +46,11 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaG
                 modifier = Modifier
                     .padding(8.dp)
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally), text = "Question ${uiState.numberQuestion}")
+                    .align(Alignment.CenterHorizontally), text = stringResource(
+                    R.string.question,
+                    uiState.numberQuestion
+                )
+            )
             Spacer(modifier = Modifier.size(8.dp))
             uiState.currentQuestion?.let {
                 Text(
