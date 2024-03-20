@@ -16,40 +16,56 @@ class GetQuestionImpl(
     override suspend fun invoke(
     ): List<Question> {
 
-            var typePrefs: String = sharedPreferences.getQuestionType().toString()
-            var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
-            var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
+        var typePrefs: String = sharedPreferences.getQuestionType().toString()
+        var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
+        var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
 
-            if (typePrefs == ANY) {
-                typePrefs = DEFAULT
+        typePrefs = if (typePrefs == ANY) {
+            DEFAULT
+        } else {
+            when (typePrefs) {
+                ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
+                else -> {
+                    BOOLEAN_TYPE
+                }
             }
+        }
+        difficultyPrefs = if (difficultyPrefs == ANY) {
+            DEFAULT
+        } else {
+            when (difficultyPrefs) {
+                ID_EASY_DIFFICULT -> EASY_DIFFICULT
+                ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
+                else -> {
+                    HARD_DIFFICULT
+                }
+            }
+        }
 
-            if(difficultyPrefs == ANY) {
-                difficultyPrefs = DEFAULT
-            }
 
-            if(categoryPrefs == ANY) {
-                categoryPrefs = DEFAULT
-            }
+        if (categoryPrefs == ANY) {
+            categoryPrefs = DEFAULT
+        }
 
         return triviaRepository.getQuestions(
-                    difficulty = difficultyPrefs,
-                    type = typePrefs,
-                    category = categoryPrefs)
-                    .map { triviaQuestion ->
+            difficulty = difficultyPrefs,
+            type = typePrefs,
+            category = categoryPrefs
+        )
+            .map { triviaQuestion ->
 
-                    val randomOptions = answerOptions(triviaQuestion)
+                val randomOptions = answerOptions(triviaQuestion)
 
-                    Question(
-                        type = triviaQuestion.type,
-                        difficulty = triviaQuestion.difficulty,
-                        category = triviaQuestion.category,
-                        question = triviaQuestion.question,
-                        correctAnswer = triviaQuestion.correctAnswer,
-                        incorrectAnswer = triviaQuestion.incorrectAnswer,
-                        answerOptions = randomOptions
-                    )
-                }
+                Question(
+                    type = triviaQuestion.type,
+                    difficulty = triviaQuestion.difficulty,
+                    category = triviaQuestion.category,
+                    question = triviaQuestion.question,
+                    correctAnswer = triviaQuestion.correctAnswer,
+                    incorrectAnswer = triviaQuestion.incorrectAnswer,
+                    answerOptions = randomOptions
+                )
+            }
 
     }
 
@@ -82,6 +98,18 @@ class GetQuestionImpl(
     companion object {
         const val ANY = "0"
         const val DEFAULT = ""
+
+        const val EASY_DIFFICULT = "easy"
+        const val MEDIUM_DIFFICULT = "medium"
+        const val HARD_DIFFICULT = "hard"
+
+        const val MULTIPLE_TYPE = "multiple"
+        const val BOOLEAN_TYPE = "boolean"
+        const val ID_MULTIPLE_TYPE = "1"
+
+        const val ID_EASY_DIFFICULT = "1"
+        const val ID_MEDIUM_DIFFICULT = "2"
+
     }
 }
 

@@ -55,7 +55,7 @@ class TriviaGameVm @Inject constructor(
         val (questions, currentQuestion, optionsAnswers) = getNewQuestion()
         _uiState.update { triviaGameState ->
             triviaGameState.copy(
-                correctAnswers = if(triviaGameState.currentState == GameStatus.ENDED) 0 else triviaGameState.correctAnswers,
+                correctAnswers = if(triviaGameState.currentState == GameStatus.ENDED || triviaGameState.currentState == GameStatus.SETUP) 0 else triviaGameState.correctAnswers,
                 isCorrectOrIncorrect = null,
                 questions = questions,
                 currentQuestion = currentQuestion,

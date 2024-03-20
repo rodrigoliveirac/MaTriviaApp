@@ -4,8 +4,6 @@ import com.rodcollab.matriviaapp.data.model.Category
 import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
-import com.rodcollab.matriviaapp.game.domain.GameCriteria
-import com.rodcollab.matriviaapp.game.domain.UserGamePrefs
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
@@ -13,7 +11,8 @@ import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val triviaRepository: TriviaRepository) : ShowPrefsAndCriteria {
+class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val triviaRepository: TriviaRepository) :
+    ShowPrefsAndCriteria {
 
     private val categories = mutableListOf<Category>()
     private val difficulties = triviaRepository.getQuestionDifficulties()
@@ -57,6 +56,6 @@ class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val
     }
 
     companion object {
-        private const val defaultValue = ""
+        private const val defaultValue = "Any Category"
     }
 }
