@@ -5,5 +5,6 @@
     <string name="difficulty_hard">hard</string>
     <string name="type_multiple">multiple</string>
     <string name="type_boolean">boolean</string>
-    <string name="default_value">\"\"</string>
+    <string name="default_type_value">"Any Type"</string>
+    <string name="default_difficulty_value">"Any Difficulty"</string>
 </resources>

@@ -2,9 +2,13 @@ package com.rodcollab.matriviaapp.game.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodcollab.matriviaapp.data.model.Category
+import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
+import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
+import com.rodcollab.matriviaapp.game.ui.ActionsField
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +56,81 @@ class TriviaGameVm @Inject constructor(
                 isLoading = false,
                 currentState = GameStatus.STARTED
             )
+        }
+    }
+
+    fun onActionField(menuField:ActionsField) {
+        viewModelScope.launch {
+            when(menuField) {
+                is ActionsField.ExpandMenu -> {
+                    when(menuField.menuField) {
+                        MenuFields.CATEGORY -> {
+                            _uiState.update {
+                                it.copy(criteriaFields = it.criteriaFields?.copy(categoryField = it.criteriaFields.categoryField.copy(expanded = !it.criteriaFields.categoryField.expanded)))
+                            }
+                        }
+                        MenuFields.DIFFICULTY -> {
+                            _uiState.update {
+                                it.copy(criteriaFields = it.criteriaFields?.copy(difficultyField = it.criteriaFields.difficultyField.copy(expanded = !it.criteriaFields.difficultyField.expanded)))
+                            }
+                        }
+                        else -> {
+                            _uiState.update {
+                                it.copy(criteriaFields = it.criteriaFields?.copy(typeField = it.criteriaFields.typeField.copy(expanded = !it.criteriaFields.typeField.expanded)))
+                            }
+                        }
+                    }
+                }
+                is ActionsField.SelectItem<*> -> {
+                    when(menuField.menuField) {
+                        MenuFields.CATEGORY -> {
+                            val category = menuField.item as Category
+                            _uiState.update { gameState ->
+
+                                val criteriaFields = gameState.criteriaFields
+
+                                gameState
+                                    .copy(
+                                        criteriaFields = criteriaFields?.
+                                        copy(
+                                            categoryField = criteriaFields
+                                                .categoryField
+                                                .copy(
+                                                expanded = !criteriaFields.categoryField.expanded,
+                                                field = criteriaFields.categoryField.field?.copy(selected = category)
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                        MenuFields.DIFFICULTY -> {
+                            val difficulty = menuField.item as QuestionDifficulty
+                            _uiState.update { gameState ->
+
+                                val criteriaFields = gameState.criteriaFields
+
+                                gameState.copy(criteriaFields = criteriaFields?.copy(difficultyField =
+                                    criteriaFields.difficultyField.copy(
+                                        expanded = !criteriaFields.difficultyField.expanded,
+                                        field = criteriaFields.difficultyField.field?.copy(selected = difficulty))))
+                            }
+                        }
+                        else -> {
+                            val type = menuField.item as QuestionType
+                            _uiState.update { gameState ->
+
+                                val criteriaFields = gameState.criteriaFields
+
+                                gameState.copy(criteriaFields = criteriaFields?.copy(typeField =
+                                criteriaFields.typeField.copy(
+                                    expanded = !criteriaFields.typeField.expanded,
+                                    field = criteriaFields.typeField.field?.copy(selected = type))))
+                            }
+                        }
+                    }
+                }
+
+            }
         }
     }
 
