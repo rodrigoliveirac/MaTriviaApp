@@ -7,28 +7,38 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,11 +47,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -58,27 +71,70 @@ import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
 import com.rodcollab.matriviaapp.game.viewmodel.MenuFields
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
 import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TriviaGameScreen(viewModel: TriviaGameVm) {
     val uiState by viewModel.uiState.collectAsState()
-    Box(modifier = Modifier.fillMaxSize()) {
-        when(uiState.currentState) {
-            GameStatus.PREP -> {
-                uiState.criteriaFields?.let { criteriaFields ->
-                    PrepareGameDialog(criteriaFields) { viewModel.onActionMenuGame(it) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var heightTopBar by remember { mutableStateOf<Dp>(0.dp) }
+    Scaffold(
+        topBar = {
+            val density = LocalDensity.current
+            CenterAlignedTopAppBar(modifier = Modifier.shadow(elevation = 6.dp).onGloballyPositioned {
+                heightTopBar = with(density) {
+                    it.size.height.toDp()
+                }
+            },title = { Text(text = stringResource(id = R.string.app_name)) })
+        },
+        snackbarHost = {
+            Box(modifier = Modifier.fillMaxSize()) {
+                SnackbarHost(modifier = Modifier.align(Alignment.TopCenter),hostState = snackbarHostState) { data ->
+                    val isError = (data.visuals as? SnackbarVisualsWithError)?.isError ?: false
+                    val textColor = if (isError) {
+                        Color(204, 0, 0)
+                    } else {
+                        Color(48, 103, 84)
+                    }
+                    Snackbar(
+                        containerColor = if(isError) Color(255, 152, 152) else Color(152, 255, 152),
+                        modifier = Modifier
+                            .padding(top = heightTopBar)
+                            .height(100.dp),
+                        shape = RectangleShape
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(modifier = Modifier.aspectRatio(0.5f),tint = textColor,painter = painterResource(id = if(isError) R.drawable.baseline_sentiment_very_dissatisfied_24 else R.drawable.baseline_sentiment_satisfied_alt_24), contentDescription = null)
+                            Spacer(Modifier.size(8.dp))
+                            Text(fontWeight = FontWeight.ExtraBold, modifier = Modifier.fillMaxWidth(),text = data.visuals.message.uppercase(), color = textColor)
+                        }
+                    }
                 }
             }
-            GameStatus.STARTED -> {
+        }) {  paddingValues ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
+            when(uiState.currentState) {
+                GameStatus.PREP -> {
+                    uiState.criteriaFields?.let { criteriaFields ->
+                        PrepareGameDialog(criteriaFields) { viewModel.onActionMenuGame(it) }
+                    }
+                }
+                GameStatus.STARTED -> {
                     Column(modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp)) {
 
-                        Text(style = MaterialTheme.typography.titleLarge,
+                        Text(style = MaterialTheme.typography.headlineMedium,
                             modifier = Modifier
                                 .padding(8.dp)
                                 .fillMaxWidth()
-                                .align(Alignment.CenterHorizontally), text = "Question")
+                                .align(Alignment.CenterHorizontally), text = "Question ${uiState.numberQuestion}")
                         Spacer(modifier = Modifier.size(8.dp))
                         uiState.currentQuestion?.let {
                             Text(
@@ -114,21 +170,49 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
 
                         uiState.currentOptionIdSelected?.let {
                             Button(modifier = Modifier.fillMaxWidth(),onClick = { viewModel.confirmAnswer() }) {
-                                Text(text = "Confirmar")
+                                Text(text = stringResource(id = R.string.confirm_answer_button))
                             }
                         }
                     }
-            }
-            else -> {
+                }
+                else -> {
 
+                }
             }
-        }
-        if(uiState.isLoading) {
-            Box(Modifier.align(Alignment.Center)) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
+            if(uiState.isLoading) {
+                Box(Modifier.align(Alignment.Center)) {
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+                }
+            }
+            uiState.isCorrectOrIncorrect?.let {
+                val msg = if(it) stringResource(R.string.congratulations_you_got_it_right) else stringResource(R.string.oops_you_got_it_wrong)
+                LaunchedEffect(Unit) {
+                    val job = launch {
+                        snackbarHostState.showSnackbar(
+                            SnackbarVisualsWithError(
+                                msg,
+                                isError = !it
+                            )
+                        )
+                    }
+                    delay(1000L)
+                    job.cancel()
+                }
             }
         }
     }
+}
+
+class SnackbarVisualsWithError(
+    override val message: String,
+    val isError: Boolean
+) : SnackbarVisuals {
+    override val actionLabel: String
+        get() = if (isError) "Wrong" else "Right"
+    override val withDismissAction: Boolean
+        get() = false
+    override val duration: SnackbarDuration
+        get() = SnackbarDuration.Indefinite
 }
 
 @Composable
@@ -161,7 +245,7 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (Me
         }
         Spacer(modifier = Modifier.size(8.dp))
         Button(onClick = { onActionMenuGame(MenuGameActions.StartGame) }) {
-            Text(text="Começar")
+            Text(text= stringResource(R.string.lets_play))
         }
     }
 }

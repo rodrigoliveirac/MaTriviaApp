@@ -7,4 +7,8 @@
     <string name="type_boolean">boolean</string>
     <string name="default_type_value">"Any Type"</string>
     <string name="default_difficulty_value">"Any Difficulty"</string>
+    <string name="congratulations_you_got_it_right">Congrats! You got it right!</string>
+    <string name="oops_you_got_it_wrong">Oops! You got it wrong!</string>
+    <string name="confirm_answer_button">Confirm</string>
+    <string name="lets_play">Let\'s Play</string>
 </resources>
