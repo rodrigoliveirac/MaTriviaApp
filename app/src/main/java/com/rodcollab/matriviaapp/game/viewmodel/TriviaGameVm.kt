@@ -9,6 +9,8 @@ import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.intent.MenuGameActions
+import com.rodcollab.matriviaapp.game.ui.components.GamePlayingActions
+import com.rodcollab.matriviaapp.game.ui.components.TimerActions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -176,64 +178,6 @@ class TriviaGameVm @Inject constructor(
         }
     }
 
-    fun confirmAnswer() {
-        viewModelScope.launch {
-
-            when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,_uiState.value.currentOptionIdSelected!!)) {
-                true -> {
-                    _uiState.update { triviaGameState ->
-                        val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
-                        val correctAnswersUpdated = incrementCorrectAnswers(triviaGameState)
-                        triviaGameState.copy(correctAnswers = correctAnswersUpdated,isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
-                    }
-                    delay(ONE_SECOND)
-                    initGameOrContinueWithNewQuestions()
-                }
-                else -> {
-                    _uiState.update { triviaGameState ->
-                        val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
-                        triviaGameState.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
-                    }
-                    delay(ONE_SECOND)
-                    _uiState.update {
-                        it.copy(
-                            correctAnswers = 0,
-                            currentState = GameStatus.PREP,
-                            questions = listOf(),
-                            currentQuestion = null,
-                            currentCorrectAnswerId = null,
-                            isCorrectOrIncorrect = null,
-                            optionsAnswers = listOf(),
-                            isLoading = false,
-                            currentOptionIdSelected = null,
-                            timeIsFinished = false
-                        )
-                    }
-                }
-            }
-
-        }
-    }
-
-    fun selectOption(selectedId: Int) {
-        viewModelScope.launch {
-            _uiState.update { gameState ->
-                var optionsAnswersUiModelUpdated = gameState.optionsAnswers
-                var currentCorrectAnswerId: Int? = gameState.currentOptionIdSelected
-                optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
-                        if(selectedId == answerOptionUiModel.id) {
-                            currentCorrectAnswerId = if(currentCorrectAnswerId == answerOptionUiModel.id) null else answerOptionUiModel.id
-                            answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
-                        } else {
-                            answerOptionUiModel.copy(selected = false)
-                        }
-                    }.toMutableList()
-
-                gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated, currentOptionIdSelected = currentCorrectAnswerId)
-            }
-        }
-    }
-
     private fun incrementCorrectAnswers(triviaGameState: TriviaGameState): Int {
         var correctAnswers = triviaGameState.correctAnswers
         correctAnswers++
@@ -251,7 +195,7 @@ class TriviaGameVm @Inject constructor(
         return optionsUpdated
     }
 
-    suspend fun updateTime() {
+    private suspend fun updateTime() {
         delay(ONE_SECOND)
         _timeState.update { timeState ->
             timeState - 1
@@ -268,10 +212,86 @@ class TriviaGameVm @Inject constructor(
         }
     }
 
-    suspend fun updateStatusGameAfterTimeIsOver() {
+    suspend fun updateStatusGamerOver() {
         delay(ONE_SECOND)
         _uiState.update {
             it.copy(currentState = GameStatus.PREP)
+        }
+    }
+
+    fun onGamePlayingAction(gamePlayingActions: GamePlayingActions) {
+        viewModelScope.launch {
+            when(gamePlayingActions) {
+                is GamePlayingActions.ConfirmAnswer -> {
+                    confirmAnswer()
+                }
+                is GamePlayingActions.SelectOption -> {
+                    selectOption(gamePlayingActions.optionId)
+                }
+            }
+        }
+    }
+
+    private suspend fun confirmAnswer() {
+        when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,_uiState.value.currentOptionIdSelected!!)) {
+            true -> {
+                _uiState.update { triviaGameState ->
+                    val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
+                    val correctAnswersUpdated = incrementCorrectAnswers(triviaGameState)
+                    triviaGameState.copy(correctAnswers = correctAnswersUpdated,isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
+                }
+                delay(ONE_SECOND)
+                initGameOrContinueWithNewQuestions()
+            }
+            else -> {
+                _uiState.update { triviaGameState ->
+                    val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
+                    triviaGameState.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
+                }
+                delay(ONE_SECOND)
+                _uiState.update {
+                    it.copy(
+                        correctAnswers = 0,
+                        currentState = GameStatus.PREP,
+                        questions = listOf(),
+                        currentQuestion = null,
+                        currentCorrectAnswerId = null,
+                        isCorrectOrIncorrect = null,
+                        optionsAnswers = listOf(),
+                        isLoading = false,
+                        currentOptionIdSelected = null,
+                        timeIsFinished = false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun selectOption(selectedId: Int) {
+        _uiState.update { gameState ->
+            var optionsAnswersUiModelUpdated = gameState.optionsAnswers
+            var currentCorrectAnswerId: Int? = gameState.currentOptionIdSelected
+            optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
+                if(selectedId == answerOptionUiModel.id) {
+                    currentCorrectAnswerId = if(currentCorrectAnswerId == answerOptionUiModel.id) null else answerOptionUiModel.id
+                    answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
+                } else {
+                    answerOptionUiModel.copy(selected = false)
+                }
+            }.toMutableList()
+
+            gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated, currentOptionIdSelected = currentCorrectAnswerId)
+        }
+    }
+
+    suspend fun onTimeActions(timerActions: TimerActions) {
+        when(timerActions) {
+            is TimerActions.Over -> {
+                updateStatusGamerOver()
+            }
+            is TimerActions.Update -> {
+                updateTime()
+            }
         }
     }
 
