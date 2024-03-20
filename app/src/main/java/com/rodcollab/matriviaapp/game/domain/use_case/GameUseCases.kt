@@ -4,5 +4,6 @@ data class GameUseCases(
     val getQuestion: GetQuestion,
     val showPrefsAndCriteria: ShowPrefsAndCriteria,
     val questionValidator : QuestionValidator,
-    val insertRanking: InsertRanking
+    val insertRanking: InsertRanking,
+    val getRanking: GetRanking
 )
