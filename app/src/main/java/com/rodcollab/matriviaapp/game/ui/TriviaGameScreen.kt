@@ -24,6 +24,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -70,38 +71,49 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
             }
             GameStatus.STARTED -> {
                     Column(modifier = Modifier
-                        .fillMaxSize()
+                        .align(Alignment.Center)
                         .padding(16.dp)) {
 
-                        Text(modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.CenterHorizontally), text = "Question")
-
-                        uiState.currentQuestion?.let {
-                            Text(modifier = Modifier
+                        Text(style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier
+                                .padding(8.dp)
                                 .fillMaxWidth()
-                                .align(Alignment.CenterHorizontally), text = it.question)
+                                .align(Alignment.CenterHorizontally), text = "Question")
+                        Spacer(modifier = Modifier.size(8.dp))
+                        uiState.currentQuestion?.let {
+                            Text(
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .fillMaxWidth()
+                                    .align(Alignment.CenterHorizontally), text = it.question)
                         }
-                        Column {
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Column(Modifier.padding(8.dp)) {
                             uiState.optionsAnswers.map {
                                 Box(modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(CircleShape)
-                                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f))) {
+                                    .border(
+                                        1.dp,
+                                        Color.LightGray.copy(alpha = 0.5f),
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clip(RoundedCornerShape(8.dp))) {
                                     Row(modifier = Modifier
                                         .fillMaxWidth()
                                         .background(Color.LightGray.copy(if (it.highlight) 0.5f else 0.0f))
                                         .padding(8.dp),verticalAlignment = Alignment.CenterVertically) {
                                         RadioButton(selected = it.selected, onClick = { viewModel.selectOption(it.id) })
                                         Spacer(modifier = Modifier.size(8.dp))
-                                        Text(it.option)
+                                        Text(style = MaterialTheme.typography.bodyMedium,text = it.option)
                                     }
                                 }
+                                Spacer(modifier = Modifier.size(8.dp))
                             }
                         }
 
                         uiState.currentOptionIdSelected?.let {
-                            Button(onClick = { viewModel.confirmAnswer() }) {
+                            Button(modifier = Modifier.fillMaxWidth(),onClick = { viewModel.confirmAnswer() }) {
                                 Text(text = "Confirmar")
                             }
                         }
