@@ -38,6 +38,11 @@ class TriviaGameVm @Inject constructor(
     }
     fun startGame() {
         viewModelScope.launch {
+            preferences.updateGamePrefs(
+                type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
+                difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
+                category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
+
             initGameOrContinueWithNewQuestions()
         }
     }
