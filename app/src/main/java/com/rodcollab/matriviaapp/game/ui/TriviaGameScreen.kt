@@ -55,6 +55,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -85,11 +86,20 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
     Scaffold(
         topBar = {
             val density = LocalDensity.current
-            CenterAlignedTopAppBar(modifier = Modifier.shadow(elevation = 6.dp).onGloballyPositioned {
-                heightTopBar = with(density) {
-                    it.size.height.toDp()
-                }
-            },title = { Text(text = stringResource(id = R.string.app_name)) })
+            CenterAlignedTopAppBar(modifier = Modifier
+                .shadow(elevation = 6.dp)
+                .onGloballyPositioned {
+                    heightTopBar = with(density) {
+                        it.size.height.toDp()
+                    }
+                },title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(textAlign = TextAlign.Center, modifier = Modifier.weight(1f),text = stringResource(id = R.string.app_name))
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(painter = painterResource(id = R.drawable.baseline_exit_to_app_24), contentDescription = null)
+                        }
+                    }
+                })
         },
         snackbarHost = {
             Box(modifier = Modifier.fillMaxSize()) {
