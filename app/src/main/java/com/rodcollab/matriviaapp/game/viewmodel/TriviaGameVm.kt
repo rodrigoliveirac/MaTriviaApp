@@ -8,9 +8,9 @@ import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
+import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.intent.MenuGameActions
-import com.rodcollab.matriviaapp.game.ui.components.GamePlayingActions
-import com.rodcollab.matriviaapp.game.ui.components.TimerActions
+import com.rodcollab.matriviaapp.game.intent.TimerActions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -195,30 +194,6 @@ class TriviaGameVm @Inject constructor(
         return optionsUpdated
     }
 
-    private suspend fun updateTime() {
-        delay(ONE_SECOND)
-        _timeState.update { timeState ->
-            timeState - 1
-        }
-        if (_timeState.value == ZERO_TIME_VALUE) {
-            _uiState.update { triviaGameState ->
-                val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
-                triviaGameState.copy(
-                    isCorrectOrIncorrect = false,
-                    optionsAnswers = optionsUpdated,
-                    timeIsFinished = true
-                )
-            }
-        }
-    }
-
-    suspend fun updateStatusGamerOver() {
-        delay(ONE_SECOND)
-        _uiState.update {
-            it.copy(currentState = GameStatus.PREP)
-        }
-    }
-
     fun onGamePlayingAction(gamePlayingActions: GamePlayingActions) {
         viewModelScope.launch {
             when(gamePlayingActions) {
@@ -295,16 +270,34 @@ class TriviaGameVm @Inject constructor(
         }
     }
 
+    private suspend fun updateTime() {
+        delay(ONE_SECOND)
+        _timeState.update { timeState ->
+            timeState - 1
+        }
+        if (_timeState.value == ZERO_TIME_VALUE) {
+            _uiState.update { triviaGameState ->
+                val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
+                triviaGameState.copy(
+                    isCorrectOrIncorrect = false,
+                    optionsAnswers = optionsUpdated,
+                    timeIsFinished = true
+                )
+            }
+        }
+    }
+
+    private suspend fun updateStatusGamerOver() {
+        delay(ONE_SECOND)
+        _uiState.update {
+            it.copy(currentState = GameStatus.PREP)
+        }
+    }
+
     companion object {
         private const val ID_CORRECT_ANSWER = 0
         private const val ONE_SECOND = 1000L
         private const val INITIAL_TIME_VALUE = 10
         private const val ZERO_TIME_VALUE = 0
     }
-}
-
-enum class MenuFields {
-    CATEGORY,
-    TYPE,
-    DIFFICULTY
 }

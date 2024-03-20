@@ -32,11 +32,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.game.intent.TimerActions
 import com.rodcollab.matriviaapp.game.ui.components.PlayingScreen
 import com.rodcollab.matriviaapp.game.ui.components.PrepareGameDialog
 import com.rodcollab.matriviaapp.game.ui.components.SnackBar
 import com.rodcollab.matriviaapp.game.ui.components.SnackBarVisualsWithError
-import com.rodcollab.matriviaapp.game.ui.components.TimerActions
 import com.rodcollab.matriviaapp.game.ui.components.TopBarGame
 import com.rodcollab.matriviaapp.game.ui.components.WidgetDialog
 import com.rodcollab.matriviaapp.game.viewmodel.GameStatus

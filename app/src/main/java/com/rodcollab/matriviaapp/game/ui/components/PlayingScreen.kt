@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 
 @Composable
@@ -82,14 +83,4 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int, uiState: TriviaGa
             }
         }
     }
-}
-
-sealed interface GamePlayingActions {
-    data class SelectOption(val optionId: Int) : GamePlayingActions
-    data object ConfirmAnswer : GamePlayingActions
-}
-
-sealed interface TimerActions {
-    data object Update : TimerActions
-    data object Over : TimerActions
 }
