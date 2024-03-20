@@ -16,7 +16,9 @@ data class TriviaGameState(
     val isLoading: Boolean = false,
     val criteriaFields: GameCriteriaUiModel? = GameCriteriaUiModel(),
     val currentOptionIdSelected: Int? = null
-)
+) {
+    val numberQuestion = correctAnswers + 1
+}
 
 data class GameCriteriaUiModel(
     val typeField: DropDownMenu<TypeFieldModel?> = DropDownMenu(field = null),
