@@ -64,6 +64,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.MenuGameActions
+import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
@@ -245,7 +246,7 @@ class SnackbarVisualsWithError(
 
 @Composable
 fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (MenuGameActions) -> Unit) {
-    WidgetDialog {
+    WidgetDialog(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Prepare the game", fontSize = 24.sp)
         }
@@ -289,6 +290,8 @@ fun DifficultyField(
     difficultyField.field?.let { field ->
         Column {
             OutlinedTextField(
+                colors = outlineFieldsCriteriaDisabled(),
+                enabled = false,
                 modifier = modifier.onGloballyPositioned {
                     width = with(density) {
                         it.size.width.toDp()
@@ -330,6 +333,8 @@ fun TypeField(
     Column {
         typeField.field?.let { field ->
             OutlinedTextField(
+                colors = outlineFieldsCriteriaDisabled(),
+                enabled = false,
                 modifier = modifier.onGloballyPositioned {
                     width = with(density) {
                         it.size.width.toDp()
@@ -374,6 +379,8 @@ fun CategoryField(
         val density = LocalDensity.current
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OutlinedTextField(
+                colors = outlineFieldsCriteriaDisabled(),
+                enabled = false,
                 modifier = modifier.onGloballyPositioned {
                     width = with(density) {
                         it.size.width.toDp()
@@ -408,7 +415,7 @@ fun CategoryField(
 @Composable
 @Preview
 fun PrepareGameDialogPreview() {
-    WidgetDialog {
+    WidgetDialog(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Prepare the game", fontSize = 24.sp)
         }
@@ -448,7 +455,7 @@ fun PrepareGameDialogPreview() {
 @Composable
 @Preview
 fun GettingNewQuestionDialogPreview() {
-    WidgetDialog {
+    WidgetDialog(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Getting new question", fontSize = 24.sp)
         }
@@ -458,11 +465,10 @@ fun GettingNewQuestionDialogPreview() {
 }
 
 @Composable
-fun WidgetDialog(content: @Composable ColumnScope.() -> Unit) {
+fun WidgetDialog(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White, RoundedCornerShape(24.dp))
+        Box(modifier = modifier
+            .background(Color.White)
             .width(300.dp)) {
             Column(
                 modifier = Modifier

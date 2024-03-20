@@ -31,7 +31,7 @@ class TriviaGameVm @Inject constructor(
     val uiState: StateFlow<TriviaGameState> = _uiState.asStateFlow()
 
     private val _timeState: MutableStateFlow<Int> by lazy {
-        MutableStateFlow(10)
+        MutableStateFlow(INITIAL_TIME_VALUE)
     }
     val timeState: StateFlow<Int> = _timeState.asStateFlow()
 
@@ -180,20 +180,38 @@ class TriviaGameVm @Inject constructor(
         viewModelScope.launch {
 
             when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,_uiState.value.currentOptionIdSelected!!)) {
-                true -> _uiState.update { triviaGameState ->
-                    val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
-                    val correctAnswersUpdated = incrementCorrectAnswers(triviaGameState)
-                    triviaGameState.copy(correctAnswers = correctAnswersUpdated,isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
+                true -> {
+                    _uiState.update { triviaGameState ->
+                        val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
+                        val correctAnswersUpdated = incrementCorrectAnswers(triviaGameState)
+                        triviaGameState.copy(correctAnswers = correctAnswersUpdated,isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
+                    }
+                    delay(ONE_SECOND)
+                    initGameOrContinueWithNewQuestions()
                 }
                 else -> {
                     _uiState.update { triviaGameState ->
                         val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
                         triviaGameState.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
                     }
+                    delay(ONE_SECOND)
+                    _uiState.update {
+                        it.copy(
+                            correctAnswers = 0,
+                            currentState = GameStatus.PREP,
+                            questions = listOf(),
+                            currentQuestion = null,
+                            currentCorrectAnswerId = null,
+                            isCorrectOrIncorrect = null,
+                            optionsAnswers = listOf(),
+                            isLoading = false,
+                            currentOptionIdSelected = null,
+                            timeIsFinished = false
+                        )
+                    }
                 }
             }
-            delay(ONE_SECOND)
-            initGameOrContinueWithNewQuestions()
+
         }
     }
 
