@@ -23,6 +23,15 @@ class TriviaGameVm @Inject constructor(
     }
     val uiState: StateFlow<TriviaGameState> = _uiState.asStateFlow()
 
+
+    init {
+        viewModelScope.launch {
+            _uiState.update {
+                val fields = gameUseCases.showPrefsAndCriteria.invoke()
+                it.copy(criteriaFields = GameCriteriaUiModel(DropDownMenu(field = fields.first), DropDownMenu(field = fields.second), DropDownMenu(field =fields.third)))
+            }
+        }
+    }
     fun startGame() {
         viewModelScope.launch {
             initGameOrContinueWithNewQuestions()
