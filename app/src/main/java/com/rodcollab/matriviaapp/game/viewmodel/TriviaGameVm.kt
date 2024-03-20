@@ -8,14 +8,17 @@ import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
-import com.rodcollab.matriviaapp.game.ui.ActionsField
+import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
 @HiltViewModel
 class TriviaGameVm @Inject constructor(
     private val preferences: Preferences,
@@ -36,18 +39,8 @@ class TriviaGameVm @Inject constructor(
             }
         }
     }
-    fun startGame() {
-        viewModelScope.launch {
-            preferences.updateGamePrefs(
-                type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
-                difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
-                category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
 
-            initGameOrContinueWithNewQuestions()
-        }
-    }
-
-    private suspend fun TriviaGameVm.initGameOrContinueWithNewQuestions() {
+    private suspend fun initGameOrContinueWithNewQuestions() {
         _uiState.update {
             it.copy(isLoading = true)
         }
@@ -59,15 +52,16 @@ class TriviaGameVm @Inject constructor(
                 currentQuestion = currentQuestion,
                 optionsAnswers = optionsAnswers,
                 isLoading = false,
-                currentState = GameStatus.STARTED
+                currentState = GameStatus.STARTED,
+                currentOptionIdSelected = null
             )
         }
     }
 
-    fun onActionField(menuField:ActionsField) {
+    fun onActionMenuGame(menuField: MenuGameActions) {
         viewModelScope.launch {
             when(menuField) {
-                is ActionsField.ExpandMenu -> {
+                is MenuGameActions.ExpandMenu -> {
                     when(menuField.menuField) {
                         MenuFields.CATEGORY -> {
                             _uiState.update {
@@ -86,7 +80,7 @@ class TriviaGameVm @Inject constructor(
                         }
                     }
                 }
-                is ActionsField.SelectItem<*> -> {
+                is MenuGameActions.SelectItem<*> -> {
                     when(menuField.menuField) {
                         MenuFields.CATEGORY -> {
                             val category = menuField.item as Category
@@ -134,15 +128,37 @@ class TriviaGameVm @Inject constructor(
                         }
                     }
                 }
+                is MenuGameActions.StartGame -> {
+                    preferences.updateGamePrefs(
+                        type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
+                        difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
+                        category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
 
+                    initGameOrContinueWithNewQuestions()
+                }
             }
         }
     }
 
     private suspend fun getNewQuestion(): Triple<List<Question>, Question, List<AnswerOptionsUiModel>> {
         return if(_uiState.value.questions.isEmpty()) {
-            val questions = gameUseCases.getQuestion.invoke()
+                val questions = gameUseCases.getQuestion.invoke().toMutableList()
+                while (questions.isEmpty()) {
+                    delay(1L)
+                }
+                val currentQuestion = questions.last()
+                questions.remove(currentQuestion)
+                val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+                    AnswerOptionsUiModel(
+                        id = answerOption.id,
+                        option = answerOption.answer,
+                    )
+                }
+                Triple(questions, currentQuestion, optionsAnswers)
+        } else {
+            val questions = _uiState.value.questions.toMutableList()
             val currentQuestion = questions.last()
+            questions.remove(currentQuestion)
             val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
                 AnswerOptionsUiModel(
                     id = answerOption.id,
@@ -150,24 +166,13 @@ class TriviaGameVm @Inject constructor(
                 )
             }
             Triple(questions, currentQuestion, optionsAnswers)
-        } else {
-            val questions = _uiState.value.questions.toMutableList()
-            questions.remove(_uiState.value.currentQuestion)
-            val currentQuestion = questions.last()
-            val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
-                AnswerOptionsUiModel(
-                    id = answerOption.id,
-                    option = answerOption.answer,
-                )
-            }
-            Triple(questions, questions.last(), optionsAnswers)
         }
     }
 
-    fun confirmAnswer(answerId:Int) {
+    fun confirmAnswer() {
         viewModelScope.launch {
 
-            when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,answerId)) {
+            when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,_uiState.value.currentOptionIdSelected!!)) {
                 true -> _uiState.update { triviaGameState ->
                     val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
                     val correctAnswersUpdated = incrementCorrectAnswers(triviaGameState)
@@ -180,7 +185,27 @@ class TriviaGameVm @Inject constructor(
                     }
                 }
             }
+            delay(1000L)
             initGameOrContinueWithNewQuestions()
+        }
+    }
+
+    fun selectOption(selectedId: Int) {
+        viewModelScope.launch {
+            _uiState.update { gameState ->
+                var optionsAnswersUiModelUpdated = gameState.optionsAnswers
+                var currentCorrectAnswerId: Int? = gameState.currentOptionIdSelected
+                optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
+                        if(selectedId == answerOptionUiModel.id) {
+                            currentCorrectAnswerId = if(currentCorrectAnswerId == answerOptionUiModel.id) null else answerOptionUiModel.id
+                            answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
+                        } else {
+                            answerOptionUiModel.copy(selected = false)
+                        }
+                    }.toMutableList()
+
+                gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated, currentOptionIdSelected = currentCorrectAnswerId)
+            }
         }
     }
 

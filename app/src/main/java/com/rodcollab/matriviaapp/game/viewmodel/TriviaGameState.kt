@@ -14,7 +14,8 @@ data class TriviaGameState(
     val isCorrectOrIncorrect: Boolean? = null,
     val optionsAnswers: List<AnswerOptionsUiModel> = listOf(),
     val isLoading: Boolean = false,
-    val criteriaFields: GameCriteriaUiModel? = GameCriteriaUiModel()
+    val criteriaFields: GameCriteriaUiModel? = GameCriteriaUiModel(),
+    val currentOptionIdSelected: Int? = null
 )
 
 data class GameCriteriaUiModel(

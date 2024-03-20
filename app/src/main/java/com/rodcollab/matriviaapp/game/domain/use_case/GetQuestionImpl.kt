@@ -7,7 +7,6 @@ import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
 
 class GetQuestionImpl(
     private val sharedPreferences: Preferences,
@@ -16,7 +15,7 @@ class GetQuestionImpl(
 
     override suspend fun invoke(
     ): List<Question> {
-        return withContext(Dispatchers.IO) {
+
             var typePrefs: String = sharedPreferences.getQuestionType().toString()
             var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
             var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
@@ -33,8 +32,7 @@ class GetQuestionImpl(
                 categoryPrefs = DEFAULT
             }
 
-            async {
-                triviaRepository.getQuestions(
+        return triviaRepository.getQuestions(
                     difficulty = difficultyPrefs,
                     type = typePrefs,
                     category = categoryPrefs)
@@ -52,8 +50,7 @@ class GetQuestionImpl(
                         answerOptions = randomOptions
                     )
                 }
-            }.await()
-        }
+
     }
 
     private suspend fun answerOptions(triviaQuestion: TriviaQuestion): MutableList<AnswerOption> {
@@ -69,6 +66,8 @@ class GetQuestionImpl(
                                 answer = triviaQuestion.correctAnswer
                             )
                         )
+                        id++
+                        answerOptions.add(AnswerOption(id = id, answer = answer))
                     } else {
                         answerOptions.add(AnswerOption(id = id, answer = answer))
                     }

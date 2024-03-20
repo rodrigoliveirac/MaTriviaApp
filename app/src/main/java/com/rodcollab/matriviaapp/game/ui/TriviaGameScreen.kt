@@ -1,9 +1,11 @@
 package com.rodcollab.matriviaapp.game.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,15 +14,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -30,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -42,10 +48,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
 import com.rodcollab.matriviaapp.game.viewmodel.GameCriteriaUiModel
+import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
 import com.rodcollab.matriviaapp.game.viewmodel.MenuFields
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
 import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
@@ -54,14 +62,65 @@ import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 fun TriviaGameScreen(viewModel: TriviaGameVm) {
     val uiState by viewModel.uiState.collectAsState()
     Box(modifier = Modifier.fillMaxSize()) {
-        uiState.criteriaFields?.let { criteriaFields ->
-            PrepareGameDialog(criteriaFields) { viewModel.onActionField(it) }
+        when(uiState.currentState) {
+            GameStatus.PREP -> {
+                uiState.criteriaFields?.let { criteriaFields ->
+                    PrepareGameDialog(criteriaFields) { viewModel.onActionMenuGame(it) }
+                }
+            }
+            GameStatus.STARTED -> {
+                    Column(modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)) {
+
+                        Text(modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.CenterHorizontally), text = "Question")
+
+                        uiState.currentQuestion?.let {
+                            Text(modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.CenterHorizontally), text = it.question)
+                        }
+                        Column {
+                            uiState.optionsAnswers.map {
+                                Box(modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(CircleShape)
+                                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f))) {
+                                    Row(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.LightGray.copy(if (it.highlight) 0.5f else 0.0f))
+                                        .padding(8.dp),verticalAlignment = Alignment.CenterVertically) {
+                                        RadioButton(selected = it.selected, onClick = { viewModel.selectOption(it.id) })
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                        Text(it.option)
+                                    }
+                                }
+                            }
+                        }
+
+                        uiState.currentOptionIdSelected?.let {
+                            Button(onClick = { viewModel.confirmAnswer() }) {
+                                Text(text = "Confirmar")
+                            }
+                        }
+                    }
+            }
+            else -> {
+
+            }
+        }
+        if(uiState.isLoading) {
+            Box(Modifier.align(Alignment.Center)) {
+                CircularProgressIndicator(Modifier.align(Alignment.Center))
+            }
         }
     }
 }
 
 @Composable
-fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, expandMenu: (ActionsField) -> Unit) {
+fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (MenuGameActions) -> Unit) {
     WidgetDialog {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Prepare the game", fontSize = 24.sp)
@@ -71,14 +130,14 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, expandMenu: (ActionsF
             Modifier
                 .fillMaxWidth()
                 .align(Alignment.CenterHorizontally), criteriaFields.categoryField
-        ) { expandMenu(it) }
+        ) { onActionMenuGame(it) }
         Spacer(modifier = Modifier.size(8.dp))
         TypeField(
             Modifier
                 .fillMaxWidth()
                 .align(Alignment.CenterHorizontally), criteriaFields.typeField
         ) {
-            expandMenu(it)
+            onActionMenuGame(it)
         }
         Spacer(modifier = Modifier.size(8.dp))
         DifficultyField(
@@ -86,9 +145,12 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, expandMenu: (ActionsF
                 .fillMaxWidth()
                 .align(Alignment.CenterHorizontally), criteriaFields.difficultyField
         ) {
-            expandMenu(it)
+            onActionMenuGame(it)
         }
         Spacer(modifier = Modifier.size(8.dp))
+        Button(onClick = { onActionMenuGame(MenuGameActions.StartGame) }) {
+            Text(text="Começar")
+        }
     }
 }
 
@@ -96,7 +158,7 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, expandMenu: (ActionsF
 fun DifficultyField(
     modifier: Modifier,
     difficultyField: DropDownMenu<DifficultyFieldModel?>,
-    onActionField: (ActionsField) -> Unit
+    onActionField: (MenuGameActions) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
@@ -108,7 +170,7 @@ fun DifficultyField(
                         it.size.width.toDp()
                     }
                 }, value = stringResource(id = field.selected.difficulty), onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.DIFFICULTY)) }) {
+                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenu(menuField = MenuFields.DIFFICULTY)) }) {
                         Icon(painter = if(difficultyField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -117,13 +179,14 @@ fun DifficultyField(
             width?.let {
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
-                    .width(it), expanded = difficultyField.expanded, onDismissRequest = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.DIFFICULTY))  }) {
+                    .width(it), expanded = difficultyField.expanded, onDismissRequest = { onActionField(
+                    MenuGameActions.ExpandMenu(menuField = MenuFields.DIFFICULTY))  }) {
                     difficultyField.field.options.map { item ->
                         DropdownMenuItem(text = {
                             Text(text = stringResource(id = item.difficulty))
                         },
                             onClick = {
-                                onActionField(ActionsField.SelectItem(menuField = MenuFields.DIFFICULTY,item = item))
+                                onActionField(MenuGameActions.SelectItem(menuField = MenuFields.DIFFICULTY,item = item))
                             })
                     }
                 }
@@ -136,7 +199,7 @@ fun DifficultyField(
 fun TypeField(
     modifier: Modifier,
     typeField: DropDownMenu<TypeFieldModel?>,
-    onActionField: (ActionsField) -> Unit
+    onActionField: (MenuGameActions) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
@@ -148,7 +211,7 @@ fun TypeField(
                         it.size.width.toDp()
                     }
                 }, value = stringResource(id = field.selected.type), onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.TYPE)) }) {
+                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenu(menuField = MenuFields.TYPE)) }) {
                         Icon(painter = if(typeField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -158,13 +221,14 @@ fun TypeField(
                 Spacer(modifier = Modifier.size(8.dp))
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
-                    .width(it), expanded = typeField.expanded, onDismissRequest = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.TYPE)) }) {
+                    .width(it), expanded = typeField.expanded, onDismissRequest = { onActionField(
+                    MenuGameActions.ExpandMenu(menuField = MenuFields.TYPE)) }) {
                     typeField.field.options.map { type ->
                         DropdownMenuItem(text = {
                             Text(text = stringResource(id = type.type))
                         },
                             onClick = {
-                                onActionField(ActionsField.SelectItem(menuField = MenuFields.TYPE, item = type))
+                                onActionField(MenuGameActions.SelectItem(menuField = MenuFields.TYPE, item = type))
                             })
                     }
                 }
@@ -178,7 +242,7 @@ fun TypeField(
 fun CategoryField(
     modifier: Modifier,
     categoryField: DropDownMenu<CategoryFieldModel?>,
-    onActionField: (ActionsField) -> Unit
+    onActionField: (MenuGameActions) -> Unit
 ) {
 
     categoryField.field?.let {field ->
@@ -191,7 +255,7 @@ fun CategoryField(
                         it.size.width.toDp()
                     }
                 }, value = field.selected.name.ifEmpty { "Any Category" } , onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
+                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
                         Icon(painter = if(categoryField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -200,13 +264,14 @@ fun CategoryField(
             width?.let {
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
-                    .width(it), expanded = categoryField.expanded, onDismissRequest = { onActionField(ActionsField.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
+                    .width(it), expanded = categoryField.expanded, onDismissRequest = { onActionField(
+                    MenuGameActions.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
                     field.options.map { category ->
                         DropdownMenuItem(text = {
                             Text(text = category.name)
                         },
                             onClick = {
-                                onActionField(ActionsField.SelectItem(menuField = MenuFields.CATEGORY,item = category))
+                                onActionField(MenuGameActions.SelectItem(menuField = MenuFields.CATEGORY,item = category))
                             })
                     }
                 }
@@ -214,11 +279,6 @@ fun CategoryField(
         }
     }
 
-}
-
-sealed interface ActionsField {
-    data class ExpandMenu(val menuField: MenuFields) : ActionsField
-    data class SelectItem<T>(val menuField:MenuFields, val item:T) : ActionsField
 }
 
 @Composable
