@@ -7,6 +7,9 @@ import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.game.domain.GameCriteria
 import com.rodcollab.matriviaapp.game.domain.UserGamePrefs
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
+import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
+import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
+import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -16,7 +19,7 @@ class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val
     private val difficulties = triviaRepository.getQuestionDifficulties()
     private val types = triviaRepository.getQuestionTypes()
 
-    override suspend fun invoke(): Pair<UserGamePrefs, GameCriteria> {
+    override suspend fun invoke(): Triple<TypeFieldModel,DifficultyFieldModel, CategoryFieldModel> {
         return withContext(Dispatchers.IO) {
 
             categories.ifEmpty {
@@ -30,18 +33,14 @@ class ShowPrefsAndCriteriaImpl(private val preferences: Preferences, private val
                         categories
                     }.await()
             }
-            
-            Pair(
-                first = UserGamePrefs(
-                    type = getQuestionTypeFromIndex(preferences.getQuestionType()),
-                    difficulty = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),
-                    category = getQuestionCategoryFromId(preferences.getQuestionCategory())
-                ), 
-                second = GameCriteria(
-                    types = types,
-                    difficulties = difficulties,
-                    categories = categories
-                )
+            val typeField = TypeFieldModel(selected = getQuestionTypeFromIndex(preferences.getQuestionType()),options = types)
+            val difficulty = DifficultyFieldModel(selected = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),options = difficulties)
+            val categories = CategoryFieldModel(selected = getQuestionCategoryFromId(preferences.getQuestionCategory()), options = categories)
+
+            Triple(
+                first = typeField,
+                second = difficulty,
+                third = categories
             )
         }
     }

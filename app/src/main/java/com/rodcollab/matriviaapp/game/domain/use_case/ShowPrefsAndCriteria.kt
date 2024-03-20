@@ -1,8 +1,9 @@
 package com.rodcollab.matriviaapp.game.domain.use_case
 
-import com.rodcollab.matriviaapp.game.domain.GameCriteria
-import com.rodcollab.matriviaapp.game.domain.UserGamePrefs
+import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
+import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
+import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 
 interface ShowPrefsAndCriteria {
-    suspend operator fun invoke(): Pair<UserGamePrefs, GameCriteria>
+    suspend operator fun invoke(): Triple<TypeFieldModel, DifficultyFieldModel, CategoryFieldModel>
 }
