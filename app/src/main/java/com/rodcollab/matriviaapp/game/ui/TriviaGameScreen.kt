@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.TimerActions
+import com.rodcollab.matriviaapp.game.ui.components.GameEndedDialog
 import com.rodcollab.matriviaapp.game.ui.components.PlayingScreen
 import com.rodcollab.matriviaapp.game.ui.components.PrepareGameDialog
 import com.rodcollab.matriviaapp.game.ui.components.SnackBar
@@ -74,7 +75,11 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     }
                 }
                 else -> {
-
+                    GameEndedDialog(
+                        uiState = uiState
+                    ) { endGameAction ->
+                        viewModel.onEndGameActions(endGameAction)
+                    }
                 }
             }
             if(uiState.isLoading) {
@@ -86,7 +91,9 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
     }
 
     LaunchSnackBar(uiState, snackbarHostState)
-    LaunchCounterTime(uiState, timeState) { viewModel.onTimeActions(it) }
+    timeState?.let { time ->
+        LaunchCounterTime(uiState, time) { viewModel.onTimeActions(it) }
+    }
 }
 
 @Composable
@@ -133,7 +140,7 @@ private fun LaunchSnackBar(
 @Composable
 @Preview
 fun PrepareGameDialogPreview() {
-    WidgetDialog(Modifier.fillMaxSize()) {
+    WidgetDialog {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Prepare the game", fontSize = 24.sp)
         }
@@ -173,7 +180,7 @@ fun PrepareGameDialogPreview() {
 @Composable
 @Preview
 fun GettingNewQuestionDialogPreview() {
-    WidgetDialog(Modifier.fillMaxSize()) {
+    WidgetDialog {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = "Getting new question", fontSize = 24.sp)
         }

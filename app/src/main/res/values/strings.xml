@@ -12,4 +12,6 @@
     <string name="confirm_answer_button">Confirm</string>
     <string name="lets_play">Let\'s Play</string>
     <string name="your_time_is_up">Your time is up.</string>
+    <string name="play_again">Play again</string>
+    <string name="back_to_game_setup">Back to Game Setup</string>
 </resources>

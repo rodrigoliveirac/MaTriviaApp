@@ -15,7 +15,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun WidgetDialog(modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun WidgetDialog(modifier: Modifier = Modifier,content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = {}, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(modifier = modifier
             .background(Color.White)

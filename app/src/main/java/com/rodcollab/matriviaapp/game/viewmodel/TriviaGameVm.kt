@@ -8,6 +8,7 @@ import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
+import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.intent.TimerActions
@@ -31,10 +32,10 @@ class TriviaGameVm @Inject constructor(
     }
     val uiState: StateFlow<TriviaGameState> = _uiState.asStateFlow()
 
-    private val _timeState: MutableStateFlow<Int> by lazy {
-        MutableStateFlow(INITIAL_TIME_VALUE)
+    private val _timeState: MutableStateFlow<Int?> by lazy {
+        MutableStateFlow(null)
     }
-    val timeState: StateFlow<Int> = _timeState.asStateFlow()
+    val timeState: StateFlow<Int?> = _timeState.asStateFlow()
 
 
     init {
@@ -53,6 +54,7 @@ class TriviaGameVm @Inject constructor(
         val (questions, currentQuestion, optionsAnswers) = getNewQuestion()
         _uiState.update { triviaGameState ->
             triviaGameState.copy(
+                correctAnswers = if(triviaGameState.currentState == GameStatus.ENDED) 0 else triviaGameState.correctAnswers,
                 isCorrectOrIncorrect = null,
                 questions = questions,
                 currentQuestion = currentQuestion,
@@ -141,7 +143,6 @@ class TriviaGameVm @Inject constructor(
                         type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
                         difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
                         category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
-
                     initGameOrContinueWithNewQuestions()
                 }
             }
@@ -226,8 +227,7 @@ class TriviaGameVm @Inject constructor(
                 delay(ONE_SECOND)
                 _uiState.update {
                     it.copy(
-                        correctAnswers = 0,
-                        currentState = GameStatus.PREP,
+                        currentState = GameStatus.ENDED,
                         questions = listOf(),
                         currentQuestion = null,
                         currentCorrectAnswerId = null,
@@ -238,6 +238,7 @@ class TriviaGameVm @Inject constructor(
                         timeIsFinished = false
                     )
                 }
+                _timeState.update { null }
             }
         }
     }
@@ -273,7 +274,7 @@ class TriviaGameVm @Inject constructor(
     private suspend fun updateTime() {
         delay(ONE_SECOND)
         _timeState.update { timeState ->
-            timeState - 1
+            timeState?.minus(1)
         }
         if (_timeState.value == ZERO_TIME_VALUE) {
             _uiState.update { triviaGameState ->
@@ -290,7 +291,33 @@ class TriviaGameVm @Inject constructor(
     private suspend fun updateStatusGamerOver() {
         delay(ONE_SECOND)
         _uiState.update {
-            it.copy(currentState = GameStatus.PREP)
+            it.copy(
+                currentState = GameStatus.ENDED,
+                questions = listOf(),
+                currentQuestion = null,
+                currentCorrectAnswerId = null,
+                isCorrectOrIncorrect = null,
+                optionsAnswers = listOf(),
+                isLoading = false,
+                currentOptionIdSelected = null,
+                timeIsFinished = false
+            )
+        }
+        _timeState.update { null }
+    }
+
+    fun onEndGameActions(endGameAction: EndGameActions) {
+        viewModelScope.launch {
+            when(endGameAction) {
+                is EndGameActions.BackToGameSetup -> {
+                    _uiState.update { gameState ->
+                        gameState.copy(currentState = GameStatus.PREP)
+                    }
+                }
+                is EndGameActions.PlayAgain -> {
+                    initGameOrContinueWithNewQuestions()
+                }
+            }
         }
     }
 

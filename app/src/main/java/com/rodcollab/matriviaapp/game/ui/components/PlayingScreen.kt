@@ -28,11 +28,13 @@ import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 
 @Composable
-fun PlayingScreen(paddingValues: PaddingValues, timeState:Int, uiState: TriviaGameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
+fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaGameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
     Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-        Text(modifier = Modifier
-            .align(Alignment.TopCenter)
-            .padding(top = 16.dp),text = "${timeState} s",color = if(timeState <= 4) Color(255, 152, 152) else Color.Black)
+        timeState?.let { time ->
+            Text(modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp),text = "${timeState} s",color = if(time <= 4) Color(255, 152, 152) else Color.Black)
+        }
 
         Column(modifier = Modifier
             .align(Alignment.Center)
