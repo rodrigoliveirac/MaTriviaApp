@@ -44,7 +44,7 @@ class TriviaRepositoryImpl @Inject constructor(private val triviaApi: TriviaApi)
     private val difficulties = arrayListOf(
         QuestionDifficulty(
             id = 0,
-            difficulty = R.string.default_value
+            difficulty = R.string.default_difficulty_value
         ),
         QuestionDifficulty(
             id = 1,
@@ -65,7 +65,7 @@ class TriviaRepositoryImpl @Inject constructor(private val triviaApi: TriviaApi)
     private val types = arrayListOf(
             QuestionType(
                 id = 0,
-                type = R.string.default_value
+                type = R.string.default_type_value
             ),
             QuestionType(
                 id = 1,
