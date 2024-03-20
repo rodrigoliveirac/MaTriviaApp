@@ -78,7 +78,18 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TriviaGameScreen(viewModel: TriviaGameVm) {
+
     val uiState by viewModel.uiState.collectAsState()
+    val timeState by viewModel.timeState.collectAsState()
+
+    LaunchedEffect(uiState.timeIsFinished) {
+        while (timeState > 0) {
+            viewModel.updateTime()
+        }
+        if(uiState.timeIsFinished) {
+            viewModel.updateStatusGameAfterTimeIsOver()
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -136,6 +147,11 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     }
                 }
                 GameStatus.STARTED -> {
+
+                    Text(modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 16.dp),text = "${timeState} s",color = if(timeState <= 4) Color(255, 152, 152) else Color.Black)
+
                     Column(modifier = Modifier
                         .align(Alignment.Center)
                         .padding(16.dp)) {
@@ -195,7 +211,9 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                 }
             }
             uiState.isCorrectOrIncorrect?.let {
-                val msg = if(it) stringResource(R.string.congratulations_you_got_it_right) else stringResource(R.string.oops_you_got_it_wrong)
+                val msg = if(it) stringResource(R.string.congratulations_you_got_it_right) else if(uiState.timeIsFinished) stringResource(
+                    R.string.your_time_is_up
+                ) else stringResource(R.string.oops_you_got_it_wrong)
                 LaunchedEffect(Unit) {
                     val job = launch {
                         snackbarHostState.showSnackbar(
@@ -254,7 +272,7 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (Me
             onActionMenuGame(it)
         }
         Spacer(modifier = Modifier.size(8.dp))
-        Button(onClick = { onActionMenuGame(MenuGameActions.StartGame) }) {
+        Button(modifier = Modifier.fillMaxWidth(),onClick = { onActionMenuGame(MenuGameActions.StartGame) }) {
             Text(text= stringResource(R.string.lets_play))
         }
     }

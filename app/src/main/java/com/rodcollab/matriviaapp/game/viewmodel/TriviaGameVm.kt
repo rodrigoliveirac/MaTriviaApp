@@ -30,6 +30,11 @@ class TriviaGameVm @Inject constructor(
     }
     val uiState: StateFlow<TriviaGameState> = _uiState.asStateFlow()
 
+    private val _timeState: MutableStateFlow<Int> by lazy {
+        MutableStateFlow(10)
+    }
+    val timeState: StateFlow<Int> = _timeState.asStateFlow()
+
 
     init {
         viewModelScope.launch {
@@ -53,9 +58,11 @@ class TriviaGameVm @Inject constructor(
                 optionsAnswers = optionsAnswers,
                 isLoading = false,
                 currentState = GameStatus.STARTED,
-                currentOptionIdSelected = null
+                currentOptionIdSelected = null,
+                timeIsFinished = false
             )
         }
+        _timeState.update { INITIAL_TIME_VALUE }
     }
 
     fun onActionMenuGame(menuField: MenuGameActions) {
@@ -185,7 +192,7 @@ class TriviaGameVm @Inject constructor(
                     }
                 }
             }
-            delay(1000L)
+            delay(ONE_SECOND)
             initGameOrContinueWithNewQuestions()
         }
     }
@@ -226,9 +233,35 @@ class TriviaGameVm @Inject constructor(
         return optionsUpdated
     }
 
+    suspend fun updateTime() {
+        delay(ONE_SECOND)
+        _timeState.update { timeState ->
+            timeState - 1
+        }
+        if (_timeState.value == ZERO_TIME_VALUE) {
+            _uiState.update { triviaGameState ->
+                val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
+                triviaGameState.copy(
+                    isCorrectOrIncorrect = false,
+                    optionsAnswers = optionsUpdated,
+                    timeIsFinished = true
+                )
+            }
+        }
+    }
+
+    suspend fun updateStatusGameAfterTimeIsOver() {
+        delay(ONE_SECOND)
+        _uiState.update {
+            it.copy(currentState = GameStatus.PREP)
+        }
+    }
+
     companion object {
         private const val ID_CORRECT_ANSWER = 0
         private const val ONE_SECOND = 1000L
+        private const val INITIAL_TIME_VALUE = 10
+        private const val ZERO_TIME_VALUE = 0
     }
 }
 
