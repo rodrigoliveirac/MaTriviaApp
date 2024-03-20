@@ -202,7 +202,13 @@ class TriviaGameVm @Inject constructor(
     }
 
     companion object {
-        const val ID_CORRECT_ANSWER = 0
-        const val ONE_SECOND = 1000L
+        private const val ID_CORRECT_ANSWER = 0
+        private const val ONE_SECOND = 1000L
     }
+}
+
+enum class MenuFields {
+    CATEGORY,
+    TYPE,
+    DIFFICULTY
 }
