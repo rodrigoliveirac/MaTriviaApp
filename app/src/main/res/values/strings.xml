@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MaTriviaApp</string>
+    <string name="difficulty_easy">easy</string>
+    <string name="difficulty_medium">medium</string>
+    <string name="difficulty_hard">hard</string>
+    <string name="type_multiple">multiple</string>
+    <string name="type_boolean">boolean</string>
 </resources>
