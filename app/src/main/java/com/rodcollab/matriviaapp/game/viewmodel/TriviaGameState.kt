@@ -11,7 +11,6 @@ data class TriviaGameState(
     val currentState: GameStatus = GameStatus.SETUP,
     val questions: List<Question> = listOf(),
     val currentQuestion: Question? = null,
-    val currentCorrectAnswerId: Int? = null,
     val isCorrectOrIncorrect: Boolean? = null,
     val optionsAnswers: List<AnswerOptionsUiModel> = listOf(),
     val isLoading: Boolean = false,

@@ -252,7 +252,6 @@ class TriviaGameVm @Inject constructor(
                         currentState = GameStatus.ENDED,
                         questions = listOf(),
                         currentQuestion = null,
-                        currentCorrectAnswerId = null,
                         isCorrectOrIncorrect = null,
                         optionsAnswers = listOf(),
                         isLoading = false,
@@ -270,20 +269,6 @@ class TriviaGameVm @Inject constructor(
     private suspend fun insertRanking() {
         val correctAnswers = _uiState.value.correctAnswers
         gameUseCases.insertRanking(correctAnswers)
-    }
-
-    private fun selectOption(selectedId: Int) {
-        _uiState.update { gameState ->
-            var optionsAnswersUiModelUpdated = gameState.optionsAnswers
-            optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
-                if(selectedId == answerOptionUiModel.id) {
-                    answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
-                } else {
-                    answerOptionUiModel.copy(selected = false)
-                }
-            }.toMutableList()
-            gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated)
-        }
     }
 
     suspend fun onTimeActions(timerActions: TimerActions) {
@@ -323,7 +308,6 @@ class TriviaGameVm @Inject constructor(
                 currentState = GameStatus.ENDED,
                 questions = listOf(),
                 currentQuestion = null,
-                currentCorrectAnswerId = null,
                 isCorrectOrIncorrect = null,
                 optionsAnswers = listOf(),
                 isLoading = false,
