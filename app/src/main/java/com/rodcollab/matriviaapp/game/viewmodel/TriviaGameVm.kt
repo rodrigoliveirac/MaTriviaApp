@@ -223,6 +223,7 @@ class TriviaGameVm @Inject constructor(
             }
             else -> {
 
+                val ranking = gameUseCases.getRanking()
                 insertRanking()
 
                 _uiState.update { triviaGameState ->
@@ -240,7 +241,8 @@ class TriviaGameVm @Inject constructor(
                         optionsAnswers = listOf(),
                         isLoading = false,
                         currentOptionIdSelected = null,
-                        timeIsFinished = false
+                        timeIsFinished = false,
+                        ranking = ranking
                     )
                 }
                 _timeState.update { null }
@@ -299,6 +301,7 @@ class TriviaGameVm @Inject constructor(
     }
 
     private suspend fun updateStatusGamerOver() {
+        val ranking = gameUseCases.getRanking()
         insertRanking()
         delay(ONE_SECOND)
         _uiState.update {
@@ -311,7 +314,8 @@ class TriviaGameVm @Inject constructor(
                 optionsAnswers = listOf(),
                 isLoading = false,
                 currentOptionIdSelected = null,
-                timeIsFinished = false
+                timeIsFinished = false,
+                ranking = ranking
             )
         }
         _timeState.update { null }
