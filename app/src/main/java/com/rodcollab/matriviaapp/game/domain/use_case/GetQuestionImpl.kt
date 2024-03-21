@@ -7,7 +7,6 @@ import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
 
 class GetQuestionImpl(
     private val sharedPreferences: Preferences,
@@ -16,44 +15,58 @@ class GetQuestionImpl(
 
     override suspend fun invoke(
     ): List<Question> {
-        return withContext(Dispatchers.IO) {
-            var typePrefs: String = sharedPreferences.getQuestionType().toString()
-            var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
-            var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
 
-            if (typePrefs == ANY) {
-                typePrefs = DEFAULT
-            }
+        var typePrefs: String = sharedPreferences.getQuestionType().toString()
+        var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
+        var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
 
-            if(difficultyPrefs == ANY) {
-                difficultyPrefs = DEFAULT
-            }
-
-            if(categoryPrefs == ANY) {
-                categoryPrefs = DEFAULT
-            }
-
-            async {
-                triviaRepository.getQuestions(
-                    difficulty = difficultyPrefs,
-                    type = typePrefs,
-                    category = categoryPrefs)
-                    .map { triviaQuestion ->
-
-                    val randomOptions = answerOptions(triviaQuestion)
-
-                    Question(
-                        type = triviaQuestion.type,
-                        difficulty = triviaQuestion.difficulty,
-                        category = triviaQuestion.category,
-                        question = triviaQuestion.question,
-                        correctAnswer = triviaQuestion.correctAnswer,
-                        incorrectAnswer = triviaQuestion.incorrectAnswer,
-                        answerOptions = randomOptions
-                    )
+        typePrefs = if (typePrefs == ANY) {
+            DEFAULT
+        } else {
+            when (typePrefs) {
+                ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
+                else -> {
+                    BOOLEAN_TYPE
                 }
-            }.await()
+            }
         }
+        difficultyPrefs = if (difficultyPrefs == ANY) {
+            DEFAULT
+        } else {
+            when (difficultyPrefs) {
+                ID_EASY_DIFFICULT -> EASY_DIFFICULT
+                ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
+                else -> {
+                    HARD_DIFFICULT
+                }
+            }
+        }
+
+
+        if (categoryPrefs == ANY) {
+            categoryPrefs = DEFAULT
+        }
+
+        return triviaRepository.getQuestions(
+            difficulty = difficultyPrefs,
+            type = typePrefs,
+            category = categoryPrefs
+        )
+            .map { triviaQuestion ->
+
+                val randomOptions = answerOptions(triviaQuestion)
+
+                Question(
+                    type = triviaQuestion.type,
+                    difficulty = triviaQuestion.difficulty,
+                    category = triviaQuestion.category,
+                    question = triviaQuestion.question,
+                    correctAnswer = triviaQuestion.correctAnswer,
+                    incorrectAnswer = triviaQuestion.incorrectAnswer,
+                    answerOptions = randomOptions
+                )
+            }
+
     }
 
     private suspend fun answerOptions(triviaQuestion: TriviaQuestion): MutableList<AnswerOption> {
@@ -69,6 +82,8 @@ class GetQuestionImpl(
                                 answer = triviaQuestion.correctAnswer
                             )
                         )
+                        id++
+                        answerOptions.add(AnswerOption(id = id, answer = answer))
                     } else {
                         answerOptions.add(AnswerOption(id = id, answer = answer))
                     }
@@ -83,6 +98,18 @@ class GetQuestionImpl(
     companion object {
         const val ANY = "0"
         const val DEFAULT = ""
+
+        const val EASY_DIFFICULT = "easy"
+        const val MEDIUM_DIFFICULT = "medium"
+        const val HARD_DIFFICULT = "hard"
+
+        const val MULTIPLE_TYPE = "multiple"
+        const val BOOLEAN_TYPE = "boolean"
+        const val ID_MULTIPLE_TYPE = "1"
+
+        const val ID_EASY_DIFFICULT = "1"
+        const val ID_MEDIUM_DIFFICULT = "2"
+
     }
 }
 

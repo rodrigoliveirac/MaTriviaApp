@@ -1,5 +1,6 @@
 package com.rodcollab.matriviaapp.data.repository
 
+import android.util.Log
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.data.api.TriviaApi
 import com.rodcollab.matriviaapp.data.model.Category
@@ -7,6 +8,7 @@ import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.data.model.TriviaQuestion
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -28,13 +30,18 @@ class TriviaRepositoryImpl @Inject constructor(private val triviaApi: TriviaApi)
 
     override suspend fun getQuestions(difficulty: String, category: String, type: String): List<TriviaQuestion> {
         return withContext(Dispatchers.IO) {
-            var questions = listOf<TriviaQuestion>()
-            val questionFromApi = triviaApi.getQuestion(difficulty = difficulty, category = category,type = type)
+            val questions = mutableListOf<TriviaQuestion>()
+            val questionFromApi = async {
+                triviaApi.getQuestion(difficulty = difficulty, category = category,type = type)
+            }.await()
             if(questionFromApi.isSuccessful) {
                 questionFromApi.body()?.let { questionResults ->
-                    questions = questionResults.results
+                        questionResults.results.forEach {
+                            questions.add(it)
+                        }
                 }
             }
+            Log.d("result", questions.toString())
             questions
         }
     }
@@ -44,7 +51,7 @@ class TriviaRepositoryImpl @Inject constructor(private val triviaApi: TriviaApi)
     private val difficulties = arrayListOf(
         QuestionDifficulty(
             id = 0,
-            difficulty = R.string.default_value
+            difficulty = R.string.default_difficulty_value
         ),
         QuestionDifficulty(
             id = 1,
@@ -65,7 +72,7 @@ class TriviaRepositoryImpl @Inject constructor(private val triviaApi: TriviaApi)
     private val types = arrayListOf(
             QuestionType(
                 id = 0,
-                type = R.string.default_value
+                type = R.string.default_type_value
             ),
             QuestionType(
                 id = 1,
