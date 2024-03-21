@@ -38,6 +38,7 @@ fun SnackBar(heightTopBar: Dp, modifier:Modifier, snackbarHostState:SnackbarHost
             Snackbar(
                 containerColor = if(isError) Color(255, 152, 152) else Color(152, 255, 152),
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(top = heightTopBar)
                     .height(100.dp),
                 shape = RectangleShape

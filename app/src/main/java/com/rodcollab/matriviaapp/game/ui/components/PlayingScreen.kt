@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
@@ -40,18 +41,20 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaG
 
         Column(modifier = Modifier
             .align(Alignment.Center)
-            .padding(16.dp)) {
-
-            Text(style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally), text = stringResource(
-                    R.string.question,
-                    uiState.numberQuestion
+            .padding(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(), text = stringResource(
+                        R.string.question,
+                        uiState.numberQuestion
+                    )
                 )
-            )
-            Spacer(modifier = Modifier.size(8.dp))
+                Text(fontWeight = FontWeight.Light,
+                    style = MaterialTheme.typography.bodyMedium,
+                    text= stringResource(id = R.string.correct_answers,uiState.correctAnswers).lowercase())
+            }
             uiState.currentQuestion?.let {
                 Text(
                     style = MaterialTheme.typography.titleMedium,
@@ -60,33 +63,37 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaG
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally), text = it.question)
             }
-            Spacer(modifier = Modifier.size(8.dp))
+            Spacer(modifier = Modifier.size(4.dp))
             Column(Modifier.padding(8.dp)) {
                 uiState.optionsAnswers.map {
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            1.dp,
-                            Color.LightGray.copy(alpha = 0.5f),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .clip(RoundedCornerShape(8.dp))) {
-                        Row(modifier = Modifier
+                    Box(
+                        Modifier
                             .fillMaxWidth()
-                            .background(Color.LightGray.copy(if (it.highlight) 0.5f else 0.0f))
-                            .padding(8.dp),verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = it.selected, onClick = { onActionGamePlaying(GamePlayingActions.SelectOption(optionId = it.id)) })
+                            .border(
+                                1.dp,
+                                Color.LightGray.copy(alpha = 0.5f),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.LightGray.copy(if (it.highlight) 0.5f else 0.0f)),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = it.selected,
+                                onClick = {
+                                    onActionGamePlaying(
+                                        GamePlayingActions.SelectOption(optionId = it.id)
+                                    )
+                                })
                             Spacer(modifier = Modifier.size(8.dp))
-                            Text(style = MaterialTheme.typography.bodyMedium,text = it.option)
+                            Text(style = MaterialTheme.typography.bodyMedium, text = it.option)
                         }
                     }
-                    Spacer(modifier = Modifier.size(8.dp))
-                }
-            }
-
-            uiState.currentOptionIdSelected?.let {
-                Button(modifier = Modifier.fillMaxWidth(),onClick = { onActionGamePlaying(GamePlayingActions.ConfirmAnswer) }) {
-                    Text(text = stringResource(id = R.string.confirm_answer_button))
+                    Spacer(modifier = Modifier.size(4.dp))
                 }
             }
         }

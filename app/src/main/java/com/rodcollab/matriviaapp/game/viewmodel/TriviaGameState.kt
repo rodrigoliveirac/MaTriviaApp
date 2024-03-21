@@ -3,6 +3,7 @@ package com.rodcollab.matriviaapp.game.viewmodel
 import com.rodcollab.matriviaapp.data.model.Category
 import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
+import com.rodcollab.matriviaapp.data.model.RankingExternal
 import com.rodcollab.matriviaapp.game.domain.Question
 
 data class TriviaGameState(
@@ -17,7 +18,8 @@ data class TriviaGameState(
     val criteriaFields: GameCriteriaUiModel? = GameCriteriaUiModel(),
     val currentOptionIdSelected: Int? = null,
     val timeIsFinished: Boolean = false,
-    val confirmWithdrawal: Boolean = false
+    val confirmWithdrawal: Boolean = false,
+    val ranking: List<RankingExternal> = listOf()
 ) {
     val numberQuestion = correctAnswers + 1
 }

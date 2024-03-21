@@ -38,6 +38,10 @@ class TriviaGameVm @Inject constructor(
     }
     val timeState: StateFlow<Int?> = _timeState.asStateFlow()
 
+    private val disableSelection: MutableStateFlow<Boolean> by lazy {
+        MutableStateFlow(false)
+    }
+
 
     init {
         viewModelScope.launch {
@@ -200,18 +204,30 @@ class TriviaGameVm @Inject constructor(
     fun onGamePlayingAction(gamePlayingActions: GamePlayingActions) {
         viewModelScope.launch {
             when(gamePlayingActions) {
-                is GamePlayingActions.ConfirmAnswer -> {
-                    confirmAnswer()
-                }
                 is GamePlayingActions.SelectOption -> {
-                    selectOption(gamePlayingActions.optionId)
+                    confirmAnswer(gamePlayingActions.optionId)
                 }
             }
         }
     }
 
-    private suspend fun confirmAnswer() {
-        when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,_uiState.value.currentOptionIdSelected!!)) {
+    private suspend fun confirmAnswer(selectedId: Int) {
+        if(!disableSelection.value) {
+            disableSelection.update { true }
+            _uiState.update { gameState ->
+                var optionsAnswersUiModelUpdated = gameState.optionsAnswers
+                optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
+                    if(selectedId == answerOptionUiModel.id) {
+                        answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
+                    } else {
+                        answerOptionUiModel.copy(selected = false)
+                    }
+                }.toMutableList()
+                gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated)
+            }
+        }
+        delay(100L)
+        when(gameUseCases.questionValidator.invoke(ID_CORRECT_ANSWER,selectedId)) {
             true -> {
                 _uiState.update { triviaGameState ->
                     val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
@@ -220,8 +236,12 @@ class TriviaGameVm @Inject constructor(
                 }
                 delay(ONE_SECOND)
                 initGameOrContinueWithNewQuestions()
+                disableSelection.update { false }
             }
             else -> {
+
+                val ranking = gameUseCases.getRanking()
+                insertRanking()
                 _uiState.update { triviaGameState ->
                     val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
                     triviaGameState.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
@@ -237,28 +257,32 @@ class TriviaGameVm @Inject constructor(
                         optionsAnswers = listOf(),
                         isLoading = false,
                         currentOptionIdSelected = null,
-                        timeIsFinished = false
+                        timeIsFinished = false,
+                        ranking = ranking
                     )
                 }
+                disableSelection.update { false }
                 _timeState.update { null }
             }
         }
     }
 
+    private suspend fun insertRanking() {
+        val correctAnswers = _uiState.value.correctAnswers
+        gameUseCases.insertRanking(correctAnswers)
+    }
+
     private fun selectOption(selectedId: Int) {
         _uiState.update { gameState ->
             var optionsAnswersUiModelUpdated = gameState.optionsAnswers
-            var currentCorrectAnswerId: Int? = gameState.currentOptionIdSelected
             optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
                 if(selectedId == answerOptionUiModel.id) {
-                    currentCorrectAnswerId = if(currentCorrectAnswerId == answerOptionUiModel.id) null else answerOptionUiModel.id
                     answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
                 } else {
                     answerOptionUiModel.copy(selected = false)
                 }
             }.toMutableList()
-
-            gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated, currentOptionIdSelected = currentCorrectAnswerId)
+            gameState.copy(optionsAnswers = optionsAnswersUiModelUpdated)
         }
     }
 
@@ -291,6 +315,8 @@ class TriviaGameVm @Inject constructor(
     }
 
     private suspend fun updateStatusGamerOver() {
+        val ranking = gameUseCases.getRanking()
+        insertRanking()
         delay(ONE_SECOND)
         _uiState.update {
             it.copy(
@@ -302,7 +328,8 @@ class TriviaGameVm @Inject constructor(
                 optionsAnswers = listOf(),
                 isLoading = false,
                 currentOptionIdSelected = null,
-                timeIsFinished = false
+                timeIsFinished = false,
+                ranking = ranking
             )
         }
         _timeState.update { null }

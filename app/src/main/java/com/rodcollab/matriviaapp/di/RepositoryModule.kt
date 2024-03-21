@@ -1,5 +1,7 @@
 package com.rodcollab.matriviaapp.di
 
+import com.rodcollab.matriviaapp.data.repository.RankingRepository
+import com.rodcollab.matriviaapp.data.repository.RankingRepositoryImpl
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.data.repository.TriviaRepositoryImpl
 import dagger.Binds
@@ -15,4 +17,7 @@ abstract class RepositoryModule {
     @Singleton
     @Binds
     abstract fun providesTriviaRepository(impl: TriviaRepositoryImpl): TriviaRepository
+    @Singleton
+    @Binds
+    abstract fun providesRankingRepository(impl: RankingRepositoryImpl) : RankingRepository
 }

@@ -27,12 +27,12 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (Me
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = stringResource(R.string.game_setup), fontSize = 24.sp,style = MaterialTheme.typography.headlineLarge)
         }
-        Spacer(modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.size(16.dp))
         Spacer(modifier = Modifier
             .height(1.dp)
             .background(Color.LightGray)
             .fillMaxWidth())
-        Spacer(modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.size(16.dp))
         CategoryField(
             Modifier
                 .fillMaxWidth()

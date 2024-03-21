@@ -9,6 +9,6 @@ import com.rodcollab.matriviaapp.data.model.local.RankingLocal
 interface RankingDao {
     @Insert
     suspend fun insert(ranking: RankingLocal)
-    @Query("SELECT * FROM ranking ORDER BY ranking_createdAt ASC LIMIT 10")
+    @Query("SELECT * FROM ranking ORDER BY ranking_createdAt DESC LIMIT 10")
     suspend fun getRanking(): List<RankingLocal>
 }
