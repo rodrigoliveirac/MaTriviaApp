@@ -97,13 +97,5 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaG
                 }
             }
         }
-        uiState.currentOptionIdSelected?.let {
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(8.dp),onClick = { onActionGamePlaying(GamePlayingActions.ConfirmAnswer) }) {
-                Text(text = stringResource(id = R.string.confirm_answer_button))
-            }
-        }
     }
 }
