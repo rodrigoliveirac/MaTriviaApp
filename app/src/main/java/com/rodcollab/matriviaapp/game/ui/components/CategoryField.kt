@@ -22,17 +22,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
-import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
-import com.rodcollab.matriviaapp.game.viewmodel.MenuFields
+import com.rodcollab.matriviaapp.redux.ExpandMenuAction
+import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
 
 @Composable
 fun CategoryField(
     modifier: Modifier,
     categoryField: DropDownMenu<CategoryFieldModel?>,
-    onActionField: (MenuGameActions) -> Unit
+    onActionField: (FieldAction) -> Unit
 ) {
 
     categoryField.field?.let {field ->
@@ -47,7 +48,7 @@ fun CategoryField(
                         it.size.width.toDp()
                     }
                 }, value = field.selected.name.ifEmpty { "Any Category" } , onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
+                    IconButton(onClick = { onActionField(ExpandMenuAction.CategoryField) }) {
                         Icon(painter = if(categoryField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -57,13 +58,13 @@ fun CategoryField(
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
                     .width(it), expanded = categoryField.expanded, onDismissRequest = { onActionField(
-                    MenuGameActions.ExpandMenu(menuField = MenuFields.CATEGORY)) }) {
+                    ExpandMenuAction.CategoryField) }) {
                     field.options.map { category ->
                         DropdownMenuItem(text = {
                             Text(text = category.name)
                         },
                             onClick = {
-                                onActionField(MenuGameActions.SelectItem(menuField = MenuFields.CATEGORY,item = category))
+                                onActionField(SelectCriteriaAction.CategoryField(category))
                             })
                     }
                 }

@@ -18,11 +18,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
-import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.viewmodel.GameCriteriaUiModel
+import com.rodcollab.matriviaapp.redux.FieldAction
 
 @Composable
-fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (MenuGameActions) -> Unit) {
+fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (FieldAction) -> Unit) {
     WidgetDialog(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxWidth()) {
             Text(modifier = Modifier.align(Alignment.Center), text = stringResource(R.string.game_setup), fontSize = 24.sp,style = MaterialTheme.typography.headlineLarge)
@@ -55,7 +55,9 @@ fun PrepareGameDialog(criteriaFields: GameCriteriaUiModel, onActionMenuGame: (Me
             onActionMenuGame(it)
         }
         Spacer(modifier = Modifier.size(24.dp))
-        Button(modifier = Modifier.fillMaxWidth(),onClick = { onActionMenuGame(MenuGameActions.StartGame) }) {
+        Button(modifier = Modifier.fillMaxWidth(),onClick = {
+           // onActionMenuGame(MenuGameActions.StartGame)
+        }) {
             Text(text= stringResource(R.string.lets_play))
         }
     }

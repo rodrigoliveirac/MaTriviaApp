@@ -2,29 +2,36 @@ package com.rodcollab.matriviaapp.game.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rodcollab.matriviaapp.data.model.Category
-import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
-import com.rodcollab.matriviaapp.data.model.QuestionType
+import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
-import com.rodcollab.matriviaapp.game.intent.MenuGameActions
 import com.rodcollab.matriviaapp.game.intent.TimerActions
+import com.rodcollab.matriviaapp.redux.ExpandMenuAction
+import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.GameState
+import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
+import com.rodcollab.matriviaapp.redux.UiActions
+import com.rodcollab.matriviaapp.redux.reducer
+import com.rodcollab.matriviaapp.redux.uiMiddleware
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.reduxkotlin.applyMiddleware
+import org.reduxkotlin.createStore
+import org.reduxkotlin.thunk.createThunkMiddleware
 import javax.inject.Inject
 
 @HiltViewModel
 class TriviaGameVm @Inject constructor(
-    private val preferences: Preferences,
     private val gameUseCases: GameUseCases
 ) : ViewModel() {
 
@@ -41,15 +48,11 @@ class TriviaGameVm @Inject constructor(
     private val disableSelection: MutableStateFlow<Boolean> by lazy {
         MutableStateFlow(false)
     }
-
+    val gameState = createStore(reducer, GameState(), applyMiddleware(
+        createThunkMiddleware(), uiMiddleware(gameUseCases.getCategories)))
 
     init {
-        viewModelScope.launch {
-            _uiState.update {
-                val fields = gameUseCases.showPrefsAndCriteria.invoke()
-                it.copy(criteriaFields = GameCriteriaUiModel(DropDownMenu(field = fields.first), DropDownMenu(field = fields.second), DropDownMenu(field =fields.third)))
-            }
-        }
+        gameState.dispatch(UiActions.GetCategory)
     }
 
     private suspend fun initGameOrContinueWithNewQuestions() {
@@ -74,83 +77,22 @@ class TriviaGameVm @Inject constructor(
         _timeState.update { INITIAL_TIME_VALUE }
     }
 
-    fun onActionMenuGame(menuField: MenuGameActions) {
+    fun onActionMenuGame(menuField: FieldAction) {
         viewModelScope.launch {
             when(menuField) {
-                is MenuGameActions.ExpandMenu -> {
-                    when(menuField.menuField) {
-                        MenuFields.CATEGORY -> {
-                            _uiState.update {
-                                it.copy(criteriaFields = it.criteriaFields?.copy(categoryField = it.criteriaFields.categoryField.copy(expanded = !it.criteriaFields.categoryField.expanded)))
-                            }
-                        }
-                        MenuFields.DIFFICULTY -> {
-                            _uiState.update {
-                                it.copy(criteriaFields = it.criteriaFields?.copy(difficultyField = it.criteriaFields.difficultyField.copy(expanded = !it.criteriaFields.difficultyField.expanded)))
-                            }
-                        }
-                        else -> {
-                            _uiState.update {
-                                it.copy(criteriaFields = it.criteriaFields?.copy(typeField = it.criteriaFields.typeField.copy(expanded = !it.criteriaFields.typeField.expanded)))
-                            }
-                        }
-                    }
+                is ExpandMenuAction -> {
+                    gameState.dispatch(menuField)
                 }
-                is MenuGameActions.SelectItem<*> -> {
-                    when(menuField.menuField) {
-                        MenuFields.CATEGORY -> {
-                            val category = menuField.item as Category
-                            _uiState.update { gameState ->
-
-                                val criteriaFields = gameState.criteriaFields
-
-                                gameState
-                                    .copy(
-                                        criteriaFields = criteriaFields?.
-                                        copy(
-                                            categoryField = criteriaFields
-                                                .categoryField
-                                                .copy(
-                                                expanded = !criteriaFields.categoryField.expanded,
-                                                field = criteriaFields.categoryField.field?.copy(selected = category)
-                                        )
-                                    )
-                                )
-                            }
-                        }
-                        MenuFields.DIFFICULTY -> {
-                            val difficulty = menuField.item as QuestionDifficulty
-                            _uiState.update { gameState ->
-
-                                val criteriaFields = gameState.criteriaFields
-
-                                gameState.copy(criteriaFields = criteriaFields?.copy(difficultyField =
-                                    criteriaFields.difficultyField.copy(
-                                        expanded = !criteriaFields.difficultyField.expanded,
-                                        field = criteriaFields.difficultyField.field?.copy(selected = difficulty))))
-                            }
-                        }
-                        else -> {
-                            val type = menuField.item as QuestionType
-                            _uiState.update { gameState ->
-
-                                val criteriaFields = gameState.criteriaFields
-
-                                gameState.copy(criteriaFields = criteriaFields?.copy(typeField =
-                                criteriaFields.typeField.copy(
-                                    expanded = !criteriaFields.typeField.expanded,
-                                    field = criteriaFields.typeField.field?.copy(selected = type))))
-                            }
-                        }
-                    }
+                is SelectCriteriaAction -> {
+                    gameState.dispatch(menuField)
                 }
-                is MenuGameActions.StartGame -> {
-                    preferences.updateGamePrefs(
-                        type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
-                        difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
-                        category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
-                    initGameOrContinueWithNewQuestions()
-                }
+//                is MenuGameActions.StartGame -> {
+//                    preferences.updateGamePrefs(
+//                        type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
+//                        difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
+//                        category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
+//                    initGameOrContinueWithNewQuestions()
+//                }
             }
         }
     }

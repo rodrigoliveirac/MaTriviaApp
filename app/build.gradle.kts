@@ -81,6 +81,7 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
-    implementation("org.reduxkotlin:redux-kotlin-threadsafe-jvm:0.5.5")
-
+    implementation("org.reduxkotlin:redux-kotlin-compose-jvm:0.6.0")
+    implementation("org.reduxkotlin:redux-kotlin-threadsafe-jvm:0.6.0")
+    implementation("org.reduxkotlin:redux-kotlin-thunk-jvm:0.6.0")
 }
