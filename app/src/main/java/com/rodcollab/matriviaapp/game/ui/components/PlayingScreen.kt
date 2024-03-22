@@ -27,9 +27,10 @@ import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
+import com.rodcollab.matriviaapp.redux.GameState
 
 @Composable
-fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: TriviaGameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
+fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: GameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(paddingValues)) {

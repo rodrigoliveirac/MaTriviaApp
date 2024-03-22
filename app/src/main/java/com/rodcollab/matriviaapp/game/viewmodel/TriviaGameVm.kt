@@ -2,23 +2,22 @@ package com.rodcollab.matriviaapp.game.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.Question
-import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
 import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
 import com.rodcollab.matriviaapp.game.intent.TimerActions
+import com.rodcollab.matriviaapp.redux.Actions
 import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.MenuGameAction
 import com.rodcollab.matriviaapp.redux.GameState
+import com.rodcollab.matriviaapp.redux.PrepareGame
 import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
-import com.rodcollab.matriviaapp.redux.UiActions
 import com.rodcollab.matriviaapp.redux.reducer
 import com.rodcollab.matriviaapp.redux.uiMiddleware
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,10 +48,10 @@ class TriviaGameVm @Inject constructor(
         MutableStateFlow(false)
     }
     val gameState = createStore(reducer, GameState(), applyMiddleware(
-        createThunkMiddleware(), uiMiddleware(gameUseCases.getCategories)))
+        createThunkMiddleware(), uiMiddleware(gameUseCases.getQuestion,gameUseCases.getCategories)))
 
     init {
-        gameState.dispatch(UiActions.GetCategory)
+        gameState.dispatch(Actions.FetchCriteriaFields)
     }
 
     private suspend fun initGameOrContinueWithNewQuestions() {
@@ -77,24 +76,8 @@ class TriviaGameVm @Inject constructor(
         _timeState.update { INITIAL_TIME_VALUE }
     }
 
-    fun onActionMenuGame(menuField: FieldAction) {
-        viewModelScope.launch {
-            when(menuField) {
-                is ExpandMenuAction -> {
-                    gameState.dispatch(menuField)
-                }
-                is SelectCriteriaAction -> {
-                    gameState.dispatch(menuField)
-                }
-//                is MenuGameActions.StartGame -> {
-//                    preferences.updateGamePrefs(
-//                        type = _uiState.value.criteriaFields?.typeField?.field?.selected?.id ?: 0,
-//                        difficulty = _uiState.value.criteriaFields?.difficultyField?.field?.selected?.id ?: 0,
-//                        category = _uiState.value.criteriaFields?.categoryField?.field?.selected?.id ?: 0)
-//                    initGameOrContinueWithNewQuestions()
-//                }
-            }
-        }
+    fun onActionMenuGame(menuGameAction: MenuGameAction) {
+        gameState.dispatch(menuGameAction)
     }
 
     private suspend fun getNewQuestion(): Triple<List<Question>, Question, List<AnswerOptionsUiModel>> {

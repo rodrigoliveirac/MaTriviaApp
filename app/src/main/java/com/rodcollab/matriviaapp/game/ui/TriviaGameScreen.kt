@@ -1,6 +1,5 @@
 package com.rodcollab.matriviaapp.game.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,7 +16,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,17 +41,11 @@ import com.rodcollab.matriviaapp.game.ui.components.SnackBar
 import com.rodcollab.matriviaapp.game.ui.components.SnackBarVisualsWithError
 import com.rodcollab.matriviaapp.game.ui.components.TopBarGame
 import com.rodcollab.matriviaapp.game.ui.components.WidgetDialog
-import com.rodcollab.matriviaapp.game.viewmodel.GameCriteriaUiModel
 import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
-import com.rodcollab.matriviaapp.redux.Actions
-import com.rodcollab.matriviaapp.redux.GameState
-import com.rodcollab.matriviaapp.redux.UiActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.reduxkotlin.compose.rememberDispatcher
-import org.reduxkotlin.compose.selectState
 
 @Composable
 fun TriviaGameScreen(viewModel: TriviaGameVm) {
@@ -76,14 +68,12 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                 modifier = Modifier.fillMaxSize(),
                 snackbarHostState = snackbarHostState)
         }) {  paddingValues ->
-            when(uiState.currentState) {
+            when(game.gameStatus) {
                 GameStatus.SETUP -> {
-
-                        PrepareGameDialog(game.gameCriteriaUiModel) { viewModel.onActionMenuGame(it) }
-
+                    PrepareGameDialog(game.gameCriteriaUiModel) { viewModel.onActionMenuGame(it) }
                 }
                 GameStatus.STARTED -> {
-                    PlayingScreen(paddingValues = paddingValues, timeState = timeState, uiState = uiState) { gamePlayingActions ->
+                    PlayingScreen(paddingValues = paddingValues, timeState = timeState, uiState = game) { gamePlayingActions ->
                         viewModel.onGamePlayingAction(gamePlayingActions)
                     }
                 }

@@ -26,14 +26,14 @@ import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
 import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.MenuGameAction
 import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
 
 @Composable
 fun DifficultyField(
     modifier: Modifier,
     difficultyField: DropDownMenu<DifficultyFieldModel?>,
-    onActionField: (FieldAction) -> Unit
+    onActionField: (MenuGameAction) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current

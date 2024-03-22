@@ -31,7 +31,7 @@ object GameDomainModule {
         preferences: Preferences
     ): GameUseCases {
         return GameUseCases(
-            getQuestion = GetQuestionImpl(preferences,repository),
+            getQuestion = GetQuestionImpl(dispatcher,preferences,repository),
             showPrefsAndCriteria = ShowPrefsAndCriteriaImpl(preferences, repository),
             questionValidator = QuestionValidatorImpl(),
             insertRanking = InsertRankingImpl(rankingRepository),

@@ -26,14 +26,14 @@ import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
 import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.MenuGameAction
 import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
 
 @Composable
 fun TypeField(
     modifier: Modifier,
     typeField: DropDownMenu<TypeFieldModel?>,
-    onActionField: (FieldAction) -> Unit
+    onActionField: (MenuGameAction) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current

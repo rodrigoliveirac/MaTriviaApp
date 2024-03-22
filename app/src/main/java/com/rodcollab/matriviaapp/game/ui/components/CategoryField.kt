@@ -26,14 +26,14 @@ import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
 import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.FieldAction
+import com.rodcollab.matriviaapp.redux.MenuGameAction
 import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
 
 @Composable
 fun CategoryField(
     modifier: Modifier,
     categoryField: DropDownMenu<CategoryFieldModel?>,
-    onActionField: (FieldAction) -> Unit
+    onActionField: (MenuGameAction) -> Unit
 ) {
 
     categoryField.field?.let {field ->
