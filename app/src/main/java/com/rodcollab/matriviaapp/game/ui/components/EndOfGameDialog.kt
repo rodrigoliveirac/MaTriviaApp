@@ -26,9 +26,10 @@ import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.data.model.RankingExternal
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
+import com.rodcollab.matriviaapp.redux.GameState
 
 @Composable
-fun EndOfGameDialog(uiState:TriviaGameState, onEndGameActions:(EndGameActions) -> Unit) {
+fun EndOfGameDialog(uiState:GameState, onEndGameActions:(EndGameActions) -> Unit) {
         WidgetDialog(modifier = Modifier.clip(RoundedCornerShape(16.dp))) {
             Text(style = MaterialTheme.typography.headlineMedium,modifier = Modifier
                 .align(Alignment.CenterHorizontally)

@@ -88,72 +88,97 @@ class GetQuestionImpl(
         scope.launch {
 
             val gameState = getState()
-            var typePrefs = gameState.gameCriteriaUiModel.typeField.toString()
-            var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.toString()
-            var categoryPrefs = gameState.gameCriteriaUiModel.categoryField.field?.selected?.id.toString()
 
-            typePrefs = if (typePrefs == ANY) {
-                DEFAULT
-            } else {
-                when (typePrefs) {
-                    ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
-                    else -> {
-                        BOOLEAN_TYPE
+            delay(500L)
+            if(gameState.questions.isEmpty()) {
+
+                var typePrefs = gameState.gameCriteriaUiModel.typeField.toString()
+                var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.toString()
+                var categoryPrefs = gameState.gameCriteriaUiModel.categoryField.field?.selected?.id.toString()
+
+                typePrefs = if (typePrefs == ANY) {
+                    DEFAULT
+                } else {
+                    when (typePrefs) {
+                        ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
+                        else -> {
+                            BOOLEAN_TYPE
+                        }
                     }
                 }
-            }
 
-            difficultyPrefs = if (difficultyPrefs == ANY) {
-                DEFAULT
-            } else {
-                when (difficultyPrefs) {
-                    ID_EASY_DIFFICULT -> EASY_DIFFICULT
-                    ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
-                    else -> {
-                        HARD_DIFFICULT
+                difficultyPrefs = if (difficultyPrefs == ANY) {
+                    DEFAULT
+                } else {
+                    when (difficultyPrefs) {
+                        ID_EASY_DIFFICULT -> EASY_DIFFICULT
+                        ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
+                        else -> {
+                            HARD_DIFFICULT
+                        }
                     }
                 }
+
+                if (categoryPrefs == ANY) {
+                    categoryPrefs = DEFAULT
+                }
+                val newQuestions = async {
+                    triviaRepository.getQuestions(
+                        difficulty = difficultyPrefs,
+                        type = typePrefs,
+                        category = categoryPrefs
+                    )
+                        .map { triviaQuestion ->
+
+                            val randomOptions = answerOptions(triviaQuestion)
+
+                            val fromApi = triviaQuestion.question
+                            val textFromHtmlFromApi = HtmlCompat.fromHtml(fromApi, HtmlCompat.FROM_HTML_MODE_LEGACY)
+
+                            Question(
+                                type = triviaQuestion.type,
+                                difficulty = triviaQuestion.difficulty,
+                                category = triviaQuestion.category,
+                                question = textFromHtmlFromApi.toString(),
+                                correctAnswer = triviaQuestion.correctAnswer,
+                                incorrectAnswer = triviaQuestion.incorrectAnswer,
+                                answerOptions = randomOptions
+                            )
+                        }
+                }.await()
+                while(newQuestions.isEmpty()) {
+                    delay(1)
+                }
+                val questions = newQuestions.toMutableList()
+                val currentQuestion = questions.last()
+                questions.remove(currentQuestion)
+                val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+                    AnswerOptionsUiModel(
+                        id = answerOption.id,
+                        option = answerOption.answer,
+                    )
+                }
+                dispatch(Actions.UpdateQuestion(Triple(questions, currentQuestion, optionsAnswers)))
+            } else {
+                val triple = getQuestionsFromCache(gameState)
+                dispatch(Actions.UpdateQuestion(Triple(triple.first, triple.second, triple.third)))
             }
-
-            if (categoryPrefs == ANY) {
-                categoryPrefs = DEFAULT
-            }
-
-            val newQuestions = async {
-                triviaRepository.getQuestions(
-                    difficulty = difficultyPrefs,
-                    type = typePrefs,
-                    category = categoryPrefs
-                )
-                    .map { triviaQuestion ->
-
-                        val randomOptions = answerOptions(triviaQuestion)
-
-                        val fromApi = triviaQuestion.question
-                        val textFromHtmlFromApi = HtmlCompat.fromHtml(fromApi, HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-                        Question(
-                            type = triviaQuestion.type,
-                            difficulty = triviaQuestion.difficulty,
-                            category = triviaQuestion.category,
-                            question = textFromHtmlFromApi.toString(),
-                            correctAnswer = triviaQuestion.correctAnswer,
-                            incorrectAnswer = triviaQuestion.incorrectAnswer,
-                            answerOptions = randomOptions
-                        )
-                    }
-            }.await()
-            val questions = newQuestions.toMutableList()
-            val currentQuestion = questions.last()
-            questions.remove(currentQuestion)
-            val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
-                AnswerOptionsUiModel(
-                    id = answerOption.id,
-                    option = answerOption.answer,
-                )
-            }
-            dispatch(Actions.UpdateQuestion(Triple(questions, currentQuestion, optionsAnswers)))
         }
+    }
+
+    private fun getQuestionsFromCache(
+        gameState: GameState,
+    ): Triple<List<Question>,Question,List<AnswerOptionsUiModel>> {
+        val questions = gameState.questions.toMutableList()
+        val currentQuestion = questions.last()
+        questions.remove(currentQuestion)
+        val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+            AnswerOptionsUiModel(
+                id = answerOption.id,
+                option = answerOption.answer,
+            )
+        }
+        return Triple(questions, currentQuestion, optionsAnswers)
     }
 
     private suspend fun answerOptions(triviaQuestion: TriviaQuestion): MutableList<AnswerOption> {

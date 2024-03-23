@@ -1,7 +1,8 @@
 package com.rodcollab.matriviaapp.game.domain.use_case
 
-import com.rodcollab.matriviaapp.data.model.RankingExternal
+import com.rodcollab.matriviaapp.redux.GameState
+import org.reduxkotlin.thunk.Thunk
 
 interface GetRanking {
-    suspend operator fun invoke() : List<RankingExternal>
+    fun getRanking() : Thunk<GameState>
 }

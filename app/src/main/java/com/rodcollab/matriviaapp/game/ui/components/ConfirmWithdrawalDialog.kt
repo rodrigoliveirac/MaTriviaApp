@@ -33,7 +33,6 @@ fun ConfirmWithdrawalDialog(onGiveUpGameActions: (GiveUpGameActions)-> Unit) {
             .background(Color.LightGray)
             .fillMaxWidth())
         Spacer(modifier = Modifier.size(24.dp))
-
         Button(modifier = Modifier.fillMaxWidth(),onClick = { onGiveUpGameActions(GiveUpGameActions.Confirm) }) {
             Text(text = stringResource(R.string.yes))
         }

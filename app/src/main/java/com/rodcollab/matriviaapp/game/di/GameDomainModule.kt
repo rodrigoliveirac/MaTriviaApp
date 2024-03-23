@@ -32,10 +32,7 @@ object GameDomainModule {
     ): GameUseCases {
         return GameUseCases(
             getQuestion = GetQuestionImpl(dispatcher,preferences,repository),
-            showPrefsAndCriteria = ShowPrefsAndCriteriaImpl(preferences, repository),
-            questionValidator = QuestionValidatorImpl(),
-            insertRanking = InsertRankingImpl(rankingRepository),
-            getRanking = GetRankingImpl(rankingRepository),
+            getRanking = GetRankingImpl(dispatcher,rankingRepository),
             getCategories = PrefsAndCriteriaThunkImpl(dispatcher,preferences,repository)
         )
     }

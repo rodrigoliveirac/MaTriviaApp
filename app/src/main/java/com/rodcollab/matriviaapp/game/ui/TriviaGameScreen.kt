@@ -44,6 +44,7 @@ import com.rodcollab.matriviaapp.game.ui.components.WidgetDialog
 import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
+import com.rodcollab.matriviaapp.redux.Actions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -79,7 +80,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                 }
                 else -> {
                     EndOfGameDialog(
-                        uiState = uiState
+                        uiState = game
                     ) { endGameAction ->
                         viewModel.onEndGameActions(endGameAction)
                     }
@@ -90,13 +91,15 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
             }
-        if (uiState.confirmWithdrawal) {
+        if (game.confirmWithdrawal) {
             ConfirmWithdrawalDialog { viewModel.onGiveUpGameAction(it) }
         }
     }
 
+    game.isCorrectOrIncorrect?.let { isCorrectAnswer ->
+        LaunchSnackBar(isCorrectAnswer, snackbarHostState) { viewModel.gameState.dispatch(Actions.ContinueGame(isCorrectAnswer)) }
+    }
 
-    LaunchSnackBar(uiState, snackbarHostState)
     timeState?.let { time ->
         LaunchCounterTime(uiState, time) { viewModel.onTimeActions(it) }
     }
@@ -120,27 +123,27 @@ private fun LaunchCounterTime(
 
 @Composable
 private fun LaunchSnackBar(
-    uiState: TriviaGameState,
-    snackbarHostState: SnackbarHostState
+    isCorrectAnswer: Boolean,
+    snackbarHostState: SnackbarHostState,
+    onContinueGame: () -> Unit,
 ) {
-    uiState.isCorrectOrIncorrect?.let {
         val msg =
-            if (it) stringResource(R.string.congratulations_you_got_it_right) else if (uiState.timeIsFinished) stringResource(
+            if (isCorrectAnswer) stringResource(R.string.congratulations_you_got_it_right) else if (isCorrectAnswer) stringResource(
                 R.string.your_time_is_up
             ) else stringResource(R.string.oops_you_got_it_wrong)
-        LaunchedEffect(Unit) {
+        LaunchedEffect(isCorrectAnswer) {
             val job = launch {
                 snackbarHostState.showSnackbar(
                     SnackBarVisualsWithError(
                         msg,
-                        isError = !it
+                        isError = !isCorrectAnswer
                     )
                 )
             }
             delay(1000L)
             job.cancel()
+            onContinueGame()
         }
-    }
 }
 
 @Composable

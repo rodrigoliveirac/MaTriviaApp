@@ -1,26 +1,29 @@
 package com.rodcollab.matriviaapp.redux
 
+import android.service.notification.NotificationListenerService.Ranking
 import android.util.Log
 import com.rodcollab.matriviaapp.data.model.Category
 import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
+import com.rodcollab.matriviaapp.data.model.RankingExternal
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GetQuestion
+import com.rodcollab.matriviaapp.game.domain.use_case.GetRanking
+import com.rodcollab.matriviaapp.game.intent.EndGameActions
+import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
 import com.rodcollab.matriviaapp.game.viewmodel.AnswerOptionsUiModel
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
 import com.rodcollab.matriviaapp.game.viewmodel.GameCriteriaUiModel
 import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
-import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
 import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.reduxkotlin.Reducer
 import org.reduxkotlin.middleware
@@ -36,13 +39,15 @@ data class GameState(
     val optionsAnswers: List<AnswerOptionsUiModel> = listOf(),
     val timeIsFinished: Boolean = false,
     val confirmWithdrawal: Boolean = false,
-    val timeState: Int? = null
+    val disableSelection:  Boolean = false,
+    val timeState: Int? = null,
+    val ranking: List<RankingExternal> = listOf()
 ) {
     val numberQuestion = correctAnswers + 1
 }
 
 class PrefsAndCriteriaThunkImpl (
-    @DefaultDispatcher networkContext: CoroutineDispatcher,
+    networkContext: CoroutineDispatcher,
     private val preferences: Preferences,
     private val repository: TriviaRepository) : GetCategoriesThunk {
 
@@ -112,6 +117,15 @@ sealed interface Actions {
     data object StartGame : Actions
     data object FetchCriteriaFields : Actions
     data class  UpdateQuestion(val triple: Triple<List<Question>, Question, List<AnswerOptionsUiModel>>) : Actions
+    data class CheckAnswer(val answerId:Int) : Actions
+    data object HandleIncorrectAnswer : Actions
+    data object HandleCorrectAnswer: Actions
+    data class ContinueGame(val isCorrectOrIncorrect: Boolean) : Actions
+    data class EndOfTheGame(val ranking: List<RankingExternal>) : Actions
+    data object OnTopBarGiveUp : Actions
+
+    data class DisableSelection(val optionId: Int) : Actions
+
 }
 sealed interface ExpandMenuAction : MenuGameAction {
     data object CategoryField : ExpandMenuAction
@@ -136,9 +150,10 @@ interface GetCategoriesThunk {
 sealed interface CriteriaFieldsActions {
     data object ExpandMenu : CriteriaFieldsActions
 }
+const val CORRECT_ANSWER_ID = 0
 
 val reducer: Reducer<GameState> = { state, action ->
-     when(action){
+    when(action){
          is Actions.UpdateCriteriaFieldsState -> state.copy(gameCriteriaUiModel = action.gameCriteria)
          is ExpandMenuAction.CategoryField ->  {
              state.copy(gameCriteriaUiModel = state.gameCriteriaUiModel.copy(categoryField = state.gameCriteriaUiModel.categoryField.copy(expanded = !state.gameCriteriaUiModel.categoryField.expanded)))
@@ -213,8 +228,9 @@ val reducer: Reducer<GameState> = { state, action ->
                  val questions = action.triple.first
                  val currentQuestion = action.triple.second
                  val optionsAnswers = action.triple.third
-                 state.copy(
-                     correctAnswers = if(state.gameStatus == GameStatus.ENDED || state.gameStatus == GameStatus.SETUP) 0 else state.correctAnswers,
+             val correctAnswersUpdated = incrementCorrectAnswers(state.correctAnswers)
+             state.copy(
+                     correctAnswers = if(state.gameStatus == GameStatus.ENDED || state.gameStatus == GameStatus.SETUP) 0 else correctAnswersUpdated,
                      isCorrectOrIncorrect = null,
                      questions = questions,
                      gameStatus = GameStatus.STARTED,
@@ -222,11 +238,59 @@ val reducer: Reducer<GameState> = { state, action ->
                      optionsAnswers = optionsAnswers,
                      timeIsFinished = false,
                      confirmWithdrawal = false,
-                     timeState = null
+                     timeState = null,
+                     disableSelection = false
                  )
          }
+         is Actions.HandleCorrectAnswer -> {
+             val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
+             state.copy(isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
+         }
+        is Actions.HandleIncorrectAnswer -> {
+            val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
+            state.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
+        }
+        is Actions.DisableSelection -> {
+            var optionsAnswersUiModelUpdated = state.optionsAnswers
+            if(!state.disableSelection) {
+                optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
+                    if(action.optionId == answerOptionUiModel.id) {
+                        answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
+                    } else {
+                        answerOptionUiModel.copy(selected = false)
+                    }
+                }.toMutableList()
+            }
+            state.copy(disableSelection = true,optionsAnswers = optionsAnswersUiModelUpdated)
+        }
+        is Actions.EndOfTheGame -> {
+                state.copy(
+                    gameStatus = GameStatus.ENDED,
+                    questions = listOf(),
+                    currentQuestion = null,
+                    isCorrectOrIncorrect = null,
+                    optionsAnswers = listOf(),
+                    timeIsFinished = false,
+                    disableSelection = false,
+                    timeState = null,
+                    ranking = action.ranking
+                )
+        }
+
+        is EndGameActions.BackToGameSetup -> {
+            state.copy(gameStatus = GameStatus.SETUP)
+        }
+        is Actions.OnTopBarGiveUp -> {
+            state.copy(confirmWithdrawal = !state.confirmWithdrawal)
+        }
+        is GiveUpGameActions.GoBack -> {
+            state.copy(confirmWithdrawal = !state.confirmWithdrawal)
+        }
          else -> { state.copy()}
      }
+}
+private fun incrementCorrectAnswers(correctAnswers: Int): Int {
+    return correctAnswers + 1
 }
 
 sealed interface PlayingGameActions {
@@ -234,7 +298,7 @@ sealed interface PlayingGameActions {
     data object GetNewQuestion
 }
 
-fun uiMiddleware(questionThunks: GetQuestion ,categoryThunks: GetCategoriesThunk) = middleware<GameState> { store, next, action ->
+fun uiMiddleware(rankingThunks: GetRanking, questionThunks: GetQuestion ,categoryThunks: GetCategoriesThunk) = middleware<GameState> { store, next, action ->
     next(action)
     val dispatch = store.dispatch
     when(action) {
@@ -249,31 +313,49 @@ fun uiMiddleware(questionThunks: GetQuestion ,categoryThunks: GetCategoriesThunk
             )
         }
         is PlayingGameActions.GetNewQuestion -> {
-            return@middleware if(store.state.questions.isEmpty()) {
-                dispatch(questionThunks.getQuestionThunk())
-            } else {
-                val triple = getQuestionsFromCache(store.state)
-                dispatch(Actions.UpdateQuestion(triple))
-            }
+             dispatch(questionThunks.getQuestionThunk())
         }
         is Actions.StartGame -> {
             dispatch(PlayingGameActions.GetNewQuestion)
+        }
+        is Actions.CheckAnswer -> {
+            store.dispatch(Actions.DisableSelection(action.answerId))
+            when(action.answerId == CORRECT_ANSWER_ID) {
+                true -> {
+                    store.dispatch(Actions.HandleCorrectAnswer)
+                }
+                else -> {
+                    store.dispatch(Actions.HandleIncorrectAnswer)
+                }
+            }
+        }
+        is Actions.ContinueGame -> {
+            when(action.isCorrectOrIncorrect) {
+                true -> {
+                    dispatch(PlayingGameActions.GetNewQuestion)
+                }
+                else -> {
+                    dispatch(rankingThunks.getRanking())
+                }
+            }
+        }
+        is EndGameActions.PlayAgain -> {
+            dispatch(PlayingGameActions.GetNewQuestion)
+        }
+        is GiveUpGameActions.Confirm -> {
+            dispatch(rankingThunks.getRanking())
         }
         else -> {}
     }
 }
 
-private fun getQuestionsFromCache(
-    gameState: GameState,
-): Triple<List<Question>,Question,List<AnswerOptionsUiModel>> {
-    val questions = gameState.questions.toMutableList()
-    val currentQuestion = questions.last()
-    questions.remove(currentQuestion)
-    val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
-        AnswerOptionsUiModel(
-            id = answerOption.id,
-            option = answerOption.answer,
-        )
-    }
-    return Triple(questions, currentQuestion, optionsAnswers)
+private fun highlightCorrectAnswer(options: List<AnswerOptionsUiModel>): MutableList<AnswerOptionsUiModel> {
+    val optionsUpdated = options.map { option ->
+        if (CORRECT_ANSWER_ID == option.id) {
+            option.copy(highlight = true)
+        } else {
+            option.copy()
+        }
+    }.toMutableList()
+    return optionsUpdated
 }
