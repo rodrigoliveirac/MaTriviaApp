@@ -21,68 +21,9 @@ import kotlin.coroutines.CoroutineContext
 
 class GetQuestionImpl(
     @DefaultDispatcher dispatcher: CoroutineDispatcher,
-    private val sharedPreferences: Preferences,
     private val triviaRepository: TriviaRepository
 ) : GetQuestion {
     private val scope = CoroutineScope(dispatcher)
-    override suspend fun invoke(
-    ): List<Question> {
-
-        var typePrefs: String = sharedPreferences.getQuestionType().toString()
-        var difficultyPrefs: String = sharedPreferences.getQuestionDifficulty().toString()
-        var categoryPrefs: String = sharedPreferences.getQuestionCategory().toString()
-
-        typePrefs = if (typePrefs == ANY) {
-            DEFAULT
-        } else {
-            when (typePrefs) {
-                ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
-                else -> {
-                    BOOLEAN_TYPE
-                }
-            }
-        }
-        difficultyPrefs = if (difficultyPrefs == ANY) {
-            DEFAULT
-        } else {
-            when (difficultyPrefs) {
-                ID_EASY_DIFFICULT -> EASY_DIFFICULT
-                ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
-                else -> {
-                    HARD_DIFFICULT
-                }
-            }
-        }
-
-
-        if (categoryPrefs == ANY) {
-            categoryPrefs = DEFAULT
-        }
-
-        return triviaRepository.getQuestions(
-            difficulty = difficultyPrefs,
-            type = typePrefs,
-            category = categoryPrefs
-        )
-            .map { triviaQuestion ->
-
-                val randomOptions = answerOptions(triviaQuestion)
-
-
-                val fromApi = triviaQuestion.question
-                val textFromHtmlFromApi = HtmlCompat.fromHtml(fromApi, HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-                Question(
-                    type = triviaQuestion.type,
-                    difficulty = triviaQuestion.difficulty,
-                    category = triviaQuestion.category,
-                    question = textFromHtmlFromApi.toString(),
-                    correctAnswer = triviaQuestion.correctAnswer,
-                    incorrectAnswer = triviaQuestion.incorrectAnswer,
-                    answerOptions = randomOptions
-                )
-            }
-    }
 
     override fun getQuestionThunk(): Thunk<GameState> = { dispatch, getState, _ ->
         scope.launch {
@@ -92,8 +33,8 @@ class GetQuestionImpl(
             delay(500L)
             if(gameState.questions.isEmpty()) {
 
-                var typePrefs = gameState.gameCriteriaUiModel.typeField.toString()
-                var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.toString()
+                var typePrefs = gameState.gameCriteriaUiModel.typeField.field?.selected?.id.toString()
+                var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.field?.selected?.id.toString()
                 var categoryPrefs = gameState.gameCriteriaUiModel.categoryField.field?.selected?.id.toString()
 
                 typePrefs = if (typePrefs == ANY) {

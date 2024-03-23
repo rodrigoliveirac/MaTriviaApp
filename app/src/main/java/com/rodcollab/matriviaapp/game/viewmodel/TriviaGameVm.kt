@@ -3,7 +3,6 @@ package com.rodcollab.matriviaapp.game.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
-import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
@@ -20,7 +19,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.reduxkotlin.applyMiddleware
 import org.reduxkotlin.createStore
@@ -33,18 +31,10 @@ class TriviaGameVm @Inject constructor(
     private val gameUseCases: GameUseCases
 ) : ViewModel() {
 
-    private val _uiState: MutableStateFlow<TriviaGameState> by lazy {
-        MutableStateFlow(TriviaGameState())
-    }
-    val uiState: StateFlow<TriviaGameState> = _uiState.asStateFlow()
 
-    private val _timeState: MutableStateFlow<Int?> by lazy {
-        MutableStateFlow(null)
-    }
-    val timeState: StateFlow<Int?> = _timeState.asStateFlow()
 
     val gameState = createStore(reducer, GameState(), applyMiddleware(
-        createThunkMiddleware(), uiMiddleware(gameUseCases.getRanking,gameUseCases.getQuestion,gameUseCases.getCategories)))
+        createThunkMiddleware(), uiMiddleware(gameUseCases.timerThunk, gameUseCases.getRanking,gameUseCases.getQuestion,gameUseCases.getCategories)))
 
     init {
         viewModelScope.launch(dispatcher) {
@@ -54,17 +44,6 @@ class TriviaGameVm @Inject constructor(
 
     fun onActionMenuGame(menuGameAction: MenuGameAction) {
         gameState.dispatch(menuGameAction)
-    }
-
-    private fun highlightCorrectAnswer(options: List<AnswerOptionsUiModel>): MutableList<AnswerOptionsUiModel> {
-        val optionsUpdated = options.map { option ->
-            if (ID_CORRECT_ANSWER == option.id) {
-                option.copy(highlight = true)
-            } else {
-                option.copy()
-            }
-        }.toMutableList()
-        return optionsUpdated
     }
 
     fun onGamePlayingAction(gamePlayingActions: GamePlayingActions) {
@@ -77,51 +56,8 @@ class TriviaGameVm @Inject constructor(
         }
     }
 
-    suspend fun onTimeActions(timerActions: TimerActions) {
-        when(timerActions) {
-            is TimerActions.Over -> {
-                updateStatusGamerOver()
-            }
-            is TimerActions.Update -> {
-                updateTime()
-            }
-        }
-    }
-
-    private suspend fun updateTime() {
-        delay(ONE_SECOND)
-        _timeState.update { timeState ->
-            timeState?.minus(1)
-        }
-        if (_timeState.value == ZERO_TIME_VALUE) {
-            _uiState.update { triviaGameState ->
-                val optionsUpdated = highlightCorrectAnswer(triviaGameState.optionsAnswers)
-                triviaGameState.copy(
-                    isCorrectOrIncorrect = false,
-                    optionsAnswers = optionsUpdated,
-                    timeIsFinished = true
-                )
-            }
-        }
-    }
-
-    private suspend fun updateStatusGamerOver() {
-        //val ranking = gameUseCases.getRanking()
-        //insertRanking()
-        delay(ONE_SECOND)
-        _uiState.update {
-            it.copy(
-                currentState = GameStatus.ENDED,
-                questions = listOf(),
-                currentQuestion = null,
-                isCorrectOrIncorrect = null,
-                optionsAnswers = listOf(),
-                isLoading = false,
-                currentOptionIdSelected = null,
-                timeIsFinished = false,
-            )
-        }
-        _timeState.update { null }
+    fun onTimeActions(timerActions: TimerActions) {
+        gameState.dispatch(timerActions)
     }
 
     fun onEndGameActions(endGameAction: EndGameActions) {

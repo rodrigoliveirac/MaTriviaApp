@@ -14,6 +14,7 @@ import com.rodcollab.matriviaapp.game.domain.use_case.GetQuestion
 import com.rodcollab.matriviaapp.game.domain.use_case.GetRanking
 import com.rodcollab.matriviaapp.game.intent.EndGameActions
 import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
+import com.rodcollab.matriviaapp.game.intent.TimerActions
 import com.rodcollab.matriviaapp.game.viewmodel.AnswerOptionsUiModel
 import com.rodcollab.matriviaapp.game.viewmodel.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
@@ -39,17 +40,18 @@ data class GameState(
     val optionsAnswers: List<AnswerOptionsUiModel> = listOf(),
     val timeIsFinished: Boolean = false,
     val confirmWithdrawal: Boolean = false,
-    val disableSelection:  Boolean = false,
+    val disableSelection: Boolean = false,
     val timeState: Int? = null,
     val ranking: List<RankingExternal> = listOf()
 ) {
     val numberQuestion = correctAnswers + 1
 }
 
-class PrefsAndCriteriaThunkImpl (
+class PrefsAndCriteriaThunkImpl(
     networkContext: CoroutineDispatcher,
     private val preferences: Preferences,
-    private val repository: TriviaRepository) : GetCategoriesThunk {
+    private val repository: TriviaRepository
+) : GetCategoriesThunk {
 
     private val scope = CoroutineScope(networkContext)
 
@@ -65,61 +67,80 @@ class PrefsAndCriteriaThunkImpl (
                     repository.getCategories().forEach { category ->
                         categories.add(category)
                     }
-                    if(categories.find { it.id == 0 } == null) {
+                    if (categories.find { it.id == 0 } == null) {
                         categories.add(Category(id = 0, name = defaultValue))
                     }
                     categories
                 }.await()
             }
 
-            val typeField = TypeFieldModel(selected = getQuestionTypeFromIndex(preferences.getQuestionType()),options = types)
-            val difficulty = DifficultyFieldModel(selected = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),options = difficulties)
-            val categories = CategoryFieldModel(selected = getQuestionCategoryFromId(preferences.getQuestionCategory()), options = categories)
+            val typeField = TypeFieldModel(
+                selected = getQuestionTypeFromIndex(preferences.getQuestionType()),
+                options = types
+            )
+            val difficulty = DifficultyFieldModel(
+                selected = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),
+                options = difficulties
+            )
+            val categories = CategoryFieldModel(
+                selected = getQuestionCategoryFromId(preferences.getQuestionCategory()),
+                options = categories
+            )
 
             dispatch(
                 Actions.UpdateCriteriaFieldsState(
                     GameCriteriaUiModel(
-                    typeField = DropDownMenu(field = typeField),
-                    difficultyField = DropDownMenu(field = difficulty),
-                    categoryField = DropDownMenu(field = categories)))
+                        typeField = DropDownMenu(field = typeField),
+                        difficultyField = DropDownMenu(field = difficulty),
+                        categoryField = DropDownMenu(field = categories)
+                    )
+                )
             )
         }
     }
 
-    override fun updatePreferences(type: Int, difficulty: Int, category: Int) : Thunk<GameState> = { dispatch, _, _ ->
-        scope.launch {
-            preferences.updateGamePrefs(type,difficulty,category)
-            Log.d("PREFERENCES_LOGGER", 
-                "PREFS_TYPE : ${preferences.getQuestionType()} " +
-                    "\n PREFS_DIFFICULTY: ${preferences.getQuestionDifficulty()} " +
-                        "\n PREFS_CATEGORY: ${preferences.getQuestionCategory()} ")
-            dispatch(Actions.StartGame)
+    override fun updatePreferences(type: Int, difficulty: Int, category: Int): Thunk<GameState> =
+        { dispatch, _, _ ->
+            scope.launch {
+                preferences.updateGamePrefs(type, difficulty, category)
+                Log.d(
+                    "PREFERENCES_LOGGER",
+                    "PREFS_TYPE : ${preferences.getQuestionType()} " +
+                            "\n PREFS_DIFFICULTY: ${preferences.getQuestionDifficulty()} " +
+                            "\n PREFS_CATEGORY: ${preferences.getQuestionCategory()} "
+                )
+                dispatch(Actions.StartGame)
+            }
         }
-    }
 
-    private fun getQuestionDifficultyFromIndex(index: Int) : QuestionDifficulty {
+    private fun getQuestionDifficultyFromIndex(index: Int): QuestionDifficulty {
         return difficulties[index]
     }
-    private fun getQuestionTypeFromIndex(index: Int) : QuestionType {
+
+    private fun getQuestionTypeFromIndex(index: Int): QuestionType {
         return types[index]
     }
-    private fun getQuestionCategoryFromId(id: Int) : Category {
+
+    private fun getQuestionCategoryFromId(id: Int): Category {
         val category = categories.indexOfFirst { it.id == id }
         return categories[category]
     }
+
     companion object {
         private const val defaultValue = "Any Category"
     }
 }
 
 sealed interface Actions {
-    data class  UpdateCriteriaFieldsState(val gameCriteria: GameCriteriaUiModel) : Actions
+    data class UpdateCriteriaFieldsState(val gameCriteria: GameCriteriaUiModel) : Actions
     data object StartGame : Actions
     data object FetchCriteriaFields : Actions
-    data class  UpdateQuestion(val triple: Triple<List<Question>, Question, List<AnswerOptionsUiModel>>) : Actions
-    data class CheckAnswer(val answerId:Int) : Actions
+    data class UpdateQuestion(val triple: Triple<List<Question>, Question, List<AnswerOptionsUiModel>>) :
+        Actions
+
+    data class CheckAnswer(val answerId: Int) : Actions
     data object HandleIncorrectAnswer : Actions
-    data object HandleCorrectAnswer: Actions
+    data object HandleCorrectAnswer : Actions
     data class ContinueGame(val isCorrectOrIncorrect: Boolean) : Actions
     data class EndOfTheGame(val ranking: List<RankingExternal>) : Actions
     data object OnTopBarGiveUp : Actions
@@ -127,11 +148,13 @@ sealed interface Actions {
     data class DisableSelection(val optionId: Int) : Actions
 
 }
+
 sealed interface ExpandMenuAction : MenuGameAction {
     data object CategoryField : ExpandMenuAction
     data object TypeField : ExpandMenuAction
     data object DifficultyField : ExpandMenuAction
 }
+
 sealed interface SelectCriteriaAction : MenuGameAction {
     data class CategoryField(val questionCategory: Category) : ExpandMenuAction
     data class TypeField(val questionType: QuestionType) : ExpandMenuAction
@@ -143,152 +166,199 @@ data object PrepareGame : MenuGameAction
 interface MenuGameAction
 
 interface GetCategoriesThunk {
-    fun getCriteriaFields() : Thunk<GameState>
-    fun updatePreferences(type: Int,difficulty: Int, category: Int) : Thunk<GameState>
+    fun getCriteriaFields(): Thunk<GameState>
+    fun updatePreferences(type: Int, difficulty: Int, category: Int): Thunk<GameState>
 }
 
 sealed interface CriteriaFieldsActions {
     data object ExpandMenu : CriteriaFieldsActions
 }
+
 const val CORRECT_ANSWER_ID = 0
 
 val reducer: Reducer<GameState> = { state, action ->
-    when(action){
-         is Actions.UpdateCriteriaFieldsState -> state.copy(gameCriteriaUiModel = action.gameCriteria)
-         is ExpandMenuAction.CategoryField ->  {
-             state.copy(gameCriteriaUiModel = state.gameCriteriaUiModel.copy(categoryField = state.gameCriteriaUiModel.categoryField.copy(expanded = !state.gameCriteriaUiModel.categoryField.expanded)))
-         }
-         is ExpandMenuAction.TypeField -> {
-             state.copy(gameCriteriaUiModel = state.gameCriteriaUiModel.copy(typeField = state.gameCriteriaUiModel.typeField.copy(expanded = !state.gameCriteriaUiModel.typeField.expanded)))
-         }
-         is ExpandMenuAction.DifficultyField -> {
-             state.copy(gameCriteriaUiModel = state.gameCriteriaUiModel.copy(difficultyField = state.gameCriteriaUiModel.difficultyField.copy(expanded = !state.gameCriteriaUiModel.difficultyField.expanded)))
-         }
-         is SelectCriteriaAction.CategoryField -> {
+    when (action) {
+        is Actions.UpdateCriteriaFieldsState -> state.copy(gameCriteriaUiModel = action.gameCriteria)
+        is ExpandMenuAction.CategoryField -> {
+            state.copy(
+                gameCriteriaUiModel = state.gameCriteriaUiModel.copy(
+                    categoryField = state.gameCriteriaUiModel.categoryField.copy(
+                        expanded = !state.gameCriteriaUiModel.categoryField.expanded
+                    )
+                )
+            )
+        }
 
-             val criteriaFields = state.gameCriteriaUiModel
-             val categoryField = criteriaFields.categoryField
+        is ExpandMenuAction.TypeField -> {
+            state.copy(
+                gameCriteriaUiModel = state.gameCriteriaUiModel.copy(
+                    typeField = state.gameCriteriaUiModel.typeField.copy(
+                        expanded = !state.gameCriteriaUiModel.typeField.expanded
+                    )
+                )
+            )
+        }
 
-             val fieldProperty = categoryField.field
-             val expandedProperty = categoryField.expanded
+        is ExpandMenuAction.DifficultyField -> {
+            state.copy(
+                gameCriteriaUiModel = state.gameCriteriaUiModel.copy(
+                    difficultyField = state.gameCriteriaUiModel.difficultyField.copy(
+                        expanded = !state.gameCriteriaUiModel.difficultyField.expanded
+                    )
+                )
+            )
+        }
 
-             state.copy(
-                 gameCriteriaUiModel = criteriaFields.
-                 copy(
-                     categoryField = categoryField
-                         .copy(
-                             expanded = !expandedProperty,
-                             field = fieldProperty?.copy(selected = action.questionCategory)
-                         )
-                 )
-             )
-         }
-         is SelectCriteriaAction.TypeField -> {
+        is SelectCriteriaAction.CategoryField -> {
 
-             val criteriaFields = state.gameCriteriaUiModel
-             val typeField = criteriaFields.typeField
+            val criteriaFields = state.gameCriteriaUiModel
+            val categoryField = criteriaFields.categoryField
 
-             val fieldProperty = typeField.field
-             val expandedProperty = typeField.expanded
+            val fieldProperty = categoryField.field
+            val expandedProperty = categoryField.expanded
 
-             state.copy(
-                     gameCriteriaUiModel = criteriaFields.
-                     copy(
-                         typeField = typeField
-                             .copy(
-                                 expanded = !expandedProperty,
-                                 field = fieldProperty?.copy(selected = action.questionType)
-                             )
-                     )
-                 )
-         }
-         is SelectCriteriaAction.DifficultyField -> {
+            state.copy(
+                gameCriteriaUiModel = criteriaFields.copy(
+                    categoryField = categoryField
+                        .copy(
+                            expanded = !expandedProperty,
+                            field = fieldProperty?.copy(selected = action.questionCategory)
+                        )
+                )
+            )
+        }
 
-             val criteriaFields = state.gameCriteriaUiModel
-             val difficultyField = criteriaFields.difficultyField
+        is SelectCriteriaAction.TypeField -> {
 
-             val fieldProperty = difficultyField.field
-             val expandedProperty = difficultyField.expanded
+            val criteriaFields = state.gameCriteriaUiModel
+            val typeField = criteriaFields.typeField
 
-             state.copy(
-                 gameCriteriaUiModel = criteriaFields.
-                 copy(
-                     difficultyField = difficultyField
-                         .copy(
-                             expanded = !expandedProperty,
-                             field = fieldProperty?.copy(selected = action.questionDifficulty)
-                         )
-                 )
-             )
-         }
-         is PlayingGameActions.UpdateStatus -> {
-             state.copy(gameStatus = action.gameStatus)
-         }
-         is Actions.UpdateQuestion -> {
-                 val questions = action.triple.first
-                 val currentQuestion = action.triple.second
-                 val optionsAnswers = action.triple.third
-             val correctAnswersUpdated = incrementCorrectAnswers(state.correctAnswers)
-             state.copy(
-                     correctAnswers = if(state.gameStatus == GameStatus.ENDED || state.gameStatus == GameStatus.SETUP) 0 else correctAnswersUpdated,
-                     isCorrectOrIncorrect = null,
-                     questions = questions,
-                     gameStatus = GameStatus.STARTED,
-                     currentQuestion = currentQuestion,
-                     optionsAnswers = optionsAnswers,
-                     timeIsFinished = false,
-                     confirmWithdrawal = false,
-                     timeState = null,
-                     disableSelection = false
-                 )
-         }
-         is Actions.HandleCorrectAnswer -> {
-             val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
-             state.copy(isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
-         }
+            val fieldProperty = typeField.field
+            val expandedProperty = typeField.expanded
+
+            state.copy(
+                gameCriteriaUiModel = criteriaFields.copy(
+                    typeField = typeField
+                        .copy(
+                            expanded = !expandedProperty,
+                            field = fieldProperty?.copy(selected = action.questionType)
+                        )
+                )
+            )
+        }
+
+        is SelectCriteriaAction.DifficultyField -> {
+
+            val criteriaFields = state.gameCriteriaUiModel
+            val difficultyField = criteriaFields.difficultyField
+
+            val fieldProperty = difficultyField.field
+            val expandedProperty = difficultyField.expanded
+
+            state.copy(
+                gameCriteriaUiModel = criteriaFields.copy(
+                    difficultyField = difficultyField
+                        .copy(
+                            expanded = !expandedProperty,
+                            field = fieldProperty?.copy(selected = action.questionDifficulty)
+                        )
+                )
+            )
+        }
+
+        is PlayingGameActions.UpdateStatus -> {
+            state.copy(gameStatus = action.gameStatus)
+        }
+
+        is Actions.UpdateQuestion -> {
+            val questions = action.triple.first
+            val currentQuestion = action.triple.second
+            val optionsAnswers = action.triple.third
+            val correctAnswersUpdated = incrementCorrectAnswers(state.correctAnswers)
+            state.copy(
+                correctAnswers = if (state.gameStatus == GameStatus.ENDED || state.gameStatus == GameStatus.SETUP) 0 else correctAnswersUpdated,
+                isCorrectOrIncorrect = null,
+                questions = questions,
+                gameStatus = GameStatus.STARTED,
+                currentQuestion = currentQuestion,
+                optionsAnswers = optionsAnswers,
+                timeIsFinished = false,
+                confirmWithdrawal = false,
+                timeState = 10,
+                disableSelection = false
+            )
+        }
+
+        is Actions.HandleCorrectAnswer -> {
+            val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
+            state.copy(isCorrectOrIncorrect = true, optionsAnswers = optionsUpdated)
+        }
+
         is Actions.HandleIncorrectAnswer -> {
             val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
             state.copy(isCorrectOrIncorrect = false, optionsAnswers = optionsUpdated)
         }
+
         is Actions.DisableSelection -> {
             var optionsAnswersUiModelUpdated = state.optionsAnswers
-            if(!state.disableSelection) {
-                optionsAnswersUiModelUpdated = optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
-                    if(action.optionId == answerOptionUiModel.id) {
-                        answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
-                    } else {
-                        answerOptionUiModel.copy(selected = false)
-                    }
-                }.toMutableList()
+            if (!state.disableSelection) {
+                optionsAnswersUiModelUpdated =
+                    optionsAnswersUiModelUpdated.map { answerOptionUiModel ->
+                        if (action.optionId == answerOptionUiModel.id) {
+                            answerOptionUiModel.copy(selected = !answerOptionUiModel.selected)
+                        } else {
+                            answerOptionUiModel.copy(selected = false)
+                        }
+                    }.toMutableList()
             }
-            state.copy(disableSelection = true,optionsAnswers = optionsAnswersUiModelUpdated)
+            state.copy(disableSelection = true, optionsAnswers = optionsAnswersUiModelUpdated)
         }
+
         is Actions.EndOfTheGame -> {
-                state.copy(
-                    gameStatus = GameStatus.ENDED,
-                    questions = listOf(),
-                    currentQuestion = null,
-                    isCorrectOrIncorrect = null,
-                    optionsAnswers = listOf(),
-                    timeIsFinished = false,
-                    disableSelection = false,
-                    timeState = null,
-                    ranking = action.ranking
-                )
+            state.copy(
+                gameStatus = GameStatus.ENDED,
+                questions = listOf(),
+                currentQuestion = null,
+                isCorrectOrIncorrect = null,
+                optionsAnswers = listOf(),
+                timeIsFinished = false,
+                disableSelection = false,
+                timeState = null,
+                ranking = action.ranking
+            )
         }
 
         is EndGameActions.BackToGameSetup -> {
             state.copy(gameStatus = GameStatus.SETUP)
         }
+
         is Actions.OnTopBarGiveUp -> {
             state.copy(confirmWithdrawal = !state.confirmWithdrawal)
         }
+
         is GiveUpGameActions.GoBack -> {
             state.copy(confirmWithdrawal = !state.confirmWithdrawal)
         }
-         else -> { state.copy()}
-     }
+
+        is TimerActions.Update -> {
+            state.copy(timeState = state.timeState?.minus(1))
+        }
+
+        is TimerActions.Over -> {
+            val optionsUpdated = highlightCorrectAnswer(state.optionsAnswers)
+            state.copy(
+                isCorrectOrIncorrect = false,
+                optionsAnswers = optionsUpdated,
+                timeIsFinished = true
+            )
+        }
+
+        else -> {
+            state.copy()
+        }
+    }
 }
+
 private fun incrementCorrectAnswers(correctAnswers: Int): Int {
     return correctAnswers + 1
 }
@@ -298,53 +368,77 @@ sealed interface PlayingGameActions {
     data object GetNewQuestion
 }
 
-fun uiMiddleware(rankingThunks: GetRanking, questionThunks: GetQuestion ,categoryThunks: GetCategoriesThunk) = middleware<GameState> { store, next, action ->
+fun uiMiddleware(
+    timerThunk: TimerThunk,
+    rankingThunks: GetRanking,
+    questionThunks: GetQuestion,
+    categoryThunks: GetCategoriesThunk
+) = middleware<GameState> { store, next, action ->
     next(action)
     val dispatch = store.dispatch
-    when(action) {
+    when (action) {
         is Actions.FetchCriteriaFields -> {
             dispatch(categoryThunks.getCriteriaFields())
         }
+
         is PrepareGame -> {
-            dispatch(categoryThunks.updatePreferences(
-                store.state.gameCriteriaUiModel.typeField.field?.selected?.id ?: 0,
-                store.state.gameCriteriaUiModel.difficultyField.field?.selected?.id ?: 0,
-                store.state.gameCriteriaUiModel.categoryField.field?.selected?.id ?: 0)
+            dispatch(
+                categoryThunks.updatePreferences(
+                    store.state.gameCriteriaUiModel.typeField.field?.selected?.id ?: 0,
+                    store.state.gameCriteriaUiModel.difficultyField.field?.selected?.id ?: 0,
+                    store.state.gameCriteriaUiModel.categoryField.field?.selected?.id ?: 0
+                )
             )
         }
+
         is PlayingGameActions.GetNewQuestion -> {
-             dispatch(questionThunks.getQuestionThunk())
+            dispatch(questionThunks.getQuestionThunk())
         }
+
         is Actions.StartGame -> {
-            dispatch(PlayingGameActions.GetNewQuestion)
+            dispatch(timerThunk.getTimerThunk())
         }
+
         is Actions.CheckAnswer -> {
             store.dispatch(Actions.DisableSelection(action.answerId))
-            when(action.answerId == CORRECT_ANSWER_ID) {
+            when (action.answerId == CORRECT_ANSWER_ID) {
                 true -> {
                     store.dispatch(Actions.HandleCorrectAnswer)
+                    store.dispatch(timerThunk.stopTimerJob())
                 }
+
                 else -> {
                     store.dispatch(Actions.HandleIncorrectAnswer)
+                    store.dispatch(timerThunk.stopTimerJob())
                 }
             }
         }
+
         is Actions.ContinueGame -> {
-            when(action.isCorrectOrIncorrect) {
+            when (action.isCorrectOrIncorrect) {
                 true -> {
-                    dispatch(PlayingGameActions.GetNewQuestion)
+                    dispatch(timerThunk.getTimerThunk())
                 }
+
                 else -> {
                     dispatch(rankingThunks.getRanking())
                 }
             }
         }
+
         is EndGameActions.PlayAgain -> {
-            dispatch(PlayingGameActions.GetNewQuestion)
+            dispatch(timerThunk.getTimerThunk())
         }
+
         is GiveUpGameActions.Confirm -> {
+            dispatch(timerThunk.stopTimerJob())
             dispatch(rankingThunks.getRanking())
         }
+
+        is TimerActions.TimerThunkDispatcher -> {
+            dispatch(timerThunk.getTimerThunk())
+        }
+
         else -> {}
     }
 }

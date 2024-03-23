@@ -45,14 +45,13 @@ import com.rodcollab.matriviaapp.game.viewmodel.GameStatus
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
 import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
 import com.rodcollab.matriviaapp.redux.Actions
+import com.rodcollab.matriviaapp.redux.GameState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun TriviaGameScreen(viewModel: TriviaGameVm) {
 
-    val uiState by viewModel.uiState.collectAsState()
-    val timeState by viewModel.timeState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var heightTopBar by remember { mutableStateOf<Dp>(0.dp) }
 
@@ -74,7 +73,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     PrepareGameDialog(game.gameCriteriaUiModel) { viewModel.onActionMenuGame(it) }
                 }
                 GameStatus.STARTED -> {
-                    PlayingScreen(paddingValues = paddingValues, timeState = timeState, uiState = game) { gamePlayingActions ->
+                    PlayingScreen(paddingValues = paddingValues, timeState = game.timeState, uiState = game) { gamePlayingActions ->
                         viewModel.onGamePlayingAction(gamePlayingActions)
                     }
                 }
@@ -86,11 +85,11 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     }
                 }
             }
-            if(uiState.isLoading) {
-                Box(Modifier.fillMaxSize()) {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
-                }
-            }
+//            if(uiState.isLoading) {
+//                Box(Modifier.fillMaxSize()) {
+//                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+//                }
+//            }
         if (game.confirmWithdrawal) {
             ConfirmWithdrawalDialog { viewModel.onGiveUpGameAction(it) }
         }
@@ -100,22 +99,22 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
         LaunchSnackBar(isCorrectAnswer, snackbarHostState) { viewModel.gameState.dispatch(Actions.ContinueGame(isCorrectAnswer)) }
     }
 
-    timeState?.let { time ->
-        LaunchCounterTime(uiState, time) { viewModel.onTimeActions(it) }
-    }
+//    game.timeState?.let { time ->
+//        LaunchCounterTime(game, time) { viewModel.onTimeActions(it) }
+//    }
 }
 
 @Composable
 private fun LaunchCounterTime(
-    uiState: TriviaGameState,
+    gameState: GameState,
     timeState: Int,
     onTimeActions: suspend (TimerActions) -> Unit
 ) {
-    LaunchedEffect(uiState.timeIsFinished) {
+    LaunchedEffect(gameState.timeIsFinished) {
         while (timeState > 0) {
-            onTimeActions(TimerActions.Update)
+            onTimeActions(TimerActions.TimerThunkDispatcher)
         }
-        if (uiState.timeIsFinished) {
+        if (gameState.timeIsFinished) {
             onTimeActions(TimerActions.Over)
         }
     }

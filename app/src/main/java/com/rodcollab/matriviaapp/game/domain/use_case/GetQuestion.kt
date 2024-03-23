@@ -5,6 +5,5 @@ import com.rodcollab.matriviaapp.redux.GameState
 import org.reduxkotlin.thunk.Thunk
 
 interface GetQuestion {
-    suspend operator fun invoke(): List<Question>
     fun getQuestionThunk() : Thunk<GameState>
 }

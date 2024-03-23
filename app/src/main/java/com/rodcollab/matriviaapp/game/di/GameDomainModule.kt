@@ -11,6 +11,8 @@ import com.rodcollab.matriviaapp.game.domain.use_case.InsertRankingImpl
 import com.rodcollab.matriviaapp.game.domain.use_case.QuestionValidatorImpl
 import com.rodcollab.matriviaapp.game.domain.use_case.ShowPrefsAndCriteriaImpl
 import com.rodcollab.matriviaapp.redux.PrefsAndCriteriaThunkImpl
+import com.rodcollab.matriviaapp.redux.TimerThunk
+import com.rodcollab.matriviaapp.redux.TimerThunkImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,9 +33,10 @@ object GameDomainModule {
         preferences: Preferences
     ): GameUseCases {
         return GameUseCases(
-            getQuestion = GetQuestionImpl(dispatcher,preferences,repository),
+            getQuestion = GetQuestionImpl(dispatcher,repository),
             getRanking = GetRankingImpl(dispatcher,rankingRepository),
-            getCategories = PrefsAndCriteriaThunkImpl(dispatcher,preferences,repository)
+            getCategories = PrefsAndCriteriaThunkImpl(dispatcher,preferences,repository),
+            timerThunk = TimerThunkImpl(dispatcher)
         )
     }
 }
