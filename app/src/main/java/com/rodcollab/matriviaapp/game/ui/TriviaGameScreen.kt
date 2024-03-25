@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -26,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -59,15 +62,28 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
 
     viewModel.gameState.subscribe { game = viewModel.gameState.state }
 
-    Scaffold(
-        topBar = {
-            TopBarGame(onHeightValue = { heightTopBar = it }) { viewModel.onTopBarGiveUpGame() }
-        },
-        snackbarHost = { SnackBar(
+    game.networkWarning?.let {
+        WidgetDialog(Modifier.fillMaxSize()) {
+            Icon(modifier = Modifier.size(64.dp),painter = painterResource(id = R.drawable.wifi_off), contentDescription = null)
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(text = "No network connection")
+            Spacer(modifier = Modifier.size(8.dp))
+            OutlinedButton(onClick = { viewModel.tryNetworkConnection() }) {
+                Text(text = "Try Again")
+                Spacer(modifier = Modifier.size(8.dp))
+                Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+            }
+        }
+    } ?: run {
+        Scaffold(
+            topBar = {
+                TopBarGame(onHeightValue = { heightTopBar = it }) { viewModel.onTopBarGiveUpGame() }
+            },
+            snackbarHost = { SnackBar(
                 heightTopBar = heightTopBar,
                 modifier = Modifier.fillMaxSize(),
                 snackbarHostState = snackbarHostState)
-        }) {  paddingValues ->
+            }) {  paddingValues ->
             when(game.gameStatus) {
                 GameStatus.SETUP -> {
                     PrepareGameDialog(game.gameCriteriaUiModel) { viewModel.onActionMenuGame(it) }
@@ -85,13 +101,9 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
                     }
                 }
             }
-//            if(uiState.isLoading) {
-//                Box(Modifier.fillMaxSize()) {
-//                    CircularProgressIndicator(Modifier.align(Alignment.Center))
-//                }
-//            }
-        if (game.confirmWithdrawal) {
-            ConfirmWithdrawalDialog { viewModel.onGiveUpGameAction(it) }
+            if (game.confirmWithdrawal) {
+                ConfirmWithdrawalDialog { viewModel.onGiveUpGameAction(it) }
+            }
         }
     }
 
@@ -99,25 +111,6 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
         LaunchSnackBar(isCorrectAnswer, snackbarHostState) { viewModel.gameState.dispatch(Actions.ContinueGame(isCorrectAnswer)) }
     }
 
-//    game.timeState?.let { time ->
-//        LaunchCounterTime(game, time) { viewModel.onTimeActions(it) }
-//    }
-}
-
-@Composable
-private fun LaunchCounterTime(
-    gameState: GameState,
-    timeState: Int,
-    onTimeActions: suspend (TimerActions) -> Unit
-) {
-    LaunchedEffect(gameState.timeIsFinished) {
-        while (timeState > 0) {
-            onTimeActions(TimerActions.TimerThunkDispatcher)
-        }
-        if (gameState.timeIsFinished) {
-            onTimeActions(TimerActions.Over)
-        }
-    }
 }
 
 @Composable

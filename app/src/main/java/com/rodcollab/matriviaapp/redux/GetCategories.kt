@@ -1,13 +1,15 @@
 package com.rodcollab.matriviaapp.redux
 
-import android.service.notification.NotificationListenerService.Ranking
+import android.net.ConnectivityManager
+import android.net.Network
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.rodcollab.matriviaapp.data.model.Category
 import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.data.model.RankingExternal
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
-import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.Question
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.domain.use_case.GetQuestion
@@ -42,9 +44,17 @@ data class GameState(
     val confirmWithdrawal: Boolean = false,
     val disableSelection: Boolean = false,
     val timeState: Int? = null,
-    val ranking: List<RankingExternal> = listOf()
+    val ranking: List<RankingExternal> = listOf(),
+    val networkIsActive: Boolean? = null,
+    val networkWarning: Boolean? = null
 ) {
     val numberQuestion = correctAnswers + 1
+}
+sealed interface NetworkActions {
+
+    data object NetworkWarning : NetworkActions
+    data object TryAgain : NetworkActions
+    data class ChangeNetworkState(val network: Boolean?) : NetworkActions
 }
 
 class PrefsAndCriteriaThunkImpl(
@@ -59,43 +69,46 @@ class PrefsAndCriteriaThunkImpl(
     private val difficulties = repository.getQuestionDifficulties()
     private val types = repository.getQuestionTypes()
 
-    override fun getCriteriaFields(): Thunk<GameState> = { dispatch, _, _ ->
+    override fun getCriteriaFields(): Thunk<GameState> = { dispatch, getState, _ ->
         scope.launch {
 
-            categories.ifEmpty {
-                async {
-                    repository.getCategories().forEach { category ->
-                        categories.add(category)
-                    }
-                    if (categories.find { it.id == 0 } == null) {
-                        categories.add(Category(id = 0, name = defaultValue))
-                    }
-                    categories
-                }.await()
-            }
+            val state = getState()
+            state.networkIsActive?.let {
+                categories.ifEmpty {
+                    async {
+                        repository.getCategories().forEach { category ->
+                            categories.add(category)
+                        }
+                        if (categories.find { it.id == 0 } == null) {
+                            categories.add(Category(id = 0, name = defaultValue))
+                        }
+                        categories
+                    }.await()
+                }
 
-            val typeField = TypeFieldModel(
-                selected = getQuestionTypeFromIndex(preferences.getQuestionType()),
-                options = types
-            )
-            val difficulty = DifficultyFieldModel(
-                selected = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),
-                options = difficulties
-            )
-            val categories = CategoryFieldModel(
-                selected = getQuestionCategoryFromId(preferences.getQuestionCategory()),
-                options = categories
-            )
+                val typeField = TypeFieldModel(
+                    selected = getQuestionTypeFromIndex(preferences.getQuestionType()),
+                    options = types
+                )
+                val difficulty = DifficultyFieldModel(
+                    selected = getQuestionDifficultyFromIndex(preferences.getQuestionDifficulty()),
+                    options = difficulties
+                )
+                val categories = CategoryFieldModel(
+                    selected = getQuestionCategoryFromId(preferences.getQuestionCategory()),
+                    options = categories
+                )
 
-            dispatch(
-                Actions.UpdateCriteriaFieldsState(
-                    GameCriteriaUiModel(
-                        typeField = DropDownMenu(field = typeField),
-                        difficultyField = DropDownMenu(field = difficulty),
-                        categoryField = DropDownMenu(field = categories)
+                dispatch(
+                    Actions.UpdateCriteriaFieldsState(
+                        GameCriteriaUiModel(
+                            typeField = DropDownMenu(field = typeField),
+                            difficultyField = DropDownMenu(field = difficulty),
+                            categoryField = DropDownMenu(field = categories)
+                        )
                     )
                 )
-            )
+            } ?: run { dispatch(NetworkActions.NetworkWarning) }
         }
     }
 
@@ -178,7 +191,7 @@ const val CORRECT_ANSWER_ID = 0
 
 val reducer: Reducer<GameState> = { state, action ->
     when (action) {
-        is Actions.UpdateCriteriaFieldsState -> state.copy(gameCriteriaUiModel = action.gameCriteria)
+        is Actions.UpdateCriteriaFieldsState -> state.copy(gameCriteriaUiModel = action.gameCriteria, networkWarning = null)
         is ExpandMenuAction.CategoryField -> {
             state.copy(
                 gameCriteriaUiModel = state.gameCriteriaUiModel.copy(
@@ -285,7 +298,8 @@ val reducer: Reducer<GameState> = { state, action ->
                 timeIsFinished = false,
                 confirmWithdrawal = false,
                 timeState = 10,
-                disableSelection = false
+                disableSelection = false,
+                networkWarning = null
             )
         }
 
@@ -352,7 +366,12 @@ val reducer: Reducer<GameState> = { state, action ->
                 timeIsFinished = true
             )
         }
-
+        is NetworkActions.ChangeNetworkState -> {
+            state.copy(networkIsActive = action.network)
+        }
+        is NetworkActions.NetworkWarning -> {
+            state.copy(networkWarning = true)
+        }
         else -> {
             state.copy()
         }
@@ -439,6 +458,13 @@ fun uiMiddleware(
             dispatch(timerThunk.getTimerThunk())
         }
 
+        is NetworkActions.TryAgain -> {
+            if(store.state.gameStatus == GameStatus.SETUP) {
+                dispatch(Actions.FetchCriteriaFields)
+            } else {
+                dispatch(timerThunk.getTimerThunk())
+            }
+        }
         else -> {}
     }
 }

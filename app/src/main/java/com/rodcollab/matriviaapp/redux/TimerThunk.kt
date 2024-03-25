@@ -14,16 +14,18 @@ class TimerThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext) : TimerThu
     private var countDownTimerJob: Job? = null
     override fun getTimerThunk(): Thunk<GameState> = { dispatch,getState,_ ->
         dispatch(PlayingGameActions.GetNewQuestion)
-        countDownTimerJob = CoroutineScope(coroutineContext).launch {
-            var value = 10
-            while (value > 0) {
-                delay(1000)
-                dispatch(TimerActions.Update)
-                value--
-            }
-            if(value == 0) {
-                dispatch(TimerActions.Over)
-                countDownTimerJob?.cancel()
+        getState().networkIsActive?.let {
+            countDownTimerJob = CoroutineScope(coroutineContext).launch {
+                var value = 10
+                while (value > 0) {
+                    delay(1000)
+                    dispatch(TimerActions.Update)
+                    value--
+                }
+                if(value == 0) {
+                    dispatch(TimerActions.Over)
+                    countDownTimerJob?.cancel()
+                }
             }
         }
         countDownTimerJob as Job

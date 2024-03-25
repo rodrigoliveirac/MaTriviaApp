@@ -5,101 +5,98 @@ import com.rodcollab.matriviaapp.data.model.TriviaQuestion
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.Question
-import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
 import com.rodcollab.matriviaapp.game.viewmodel.AnswerOptionsUiModel
 import com.rodcollab.matriviaapp.redux.Actions
 import com.rodcollab.matriviaapp.redux.GameState
-import com.rodcollab.matriviaapp.redux.PlayingGameActions
+import com.rodcollab.matriviaapp.redux.NetworkActions
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.reduxkotlin.thunk.Thunk
-import kotlin.coroutines.CoroutineContext
 
 class GetQuestionImpl(
     @DefaultDispatcher dispatcher: CoroutineDispatcher,
     private val triviaRepository: TriviaRepository
 ) : GetQuestion {
-    private val scope = CoroutineScope(dispatcher)
+    private val scope = CoroutineScope(dispatcher + Job())
 
     override fun getQuestionThunk(): Thunk<GameState> = { dispatch, getState, _ ->
         scope.launch {
-
             val gameState = getState()
-
             delay(500L)
             if(gameState.questions.isEmpty()) {
 
-                var typePrefs = gameState.gameCriteriaUiModel.typeField.field?.selected?.id.toString()
-                var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.field?.selected?.id.toString()
-                var categoryPrefs = gameState.gameCriteriaUiModel.categoryField.field?.selected?.id.toString()
+                gameState.networkIsActive?.let {
+                    var typePrefs = gameState.gameCriteriaUiModel.typeField.field?.selected?.id.toString()
+                    var difficultyPrefs = gameState.gameCriteriaUiModel.difficultyField.field?.selected?.id.toString()
+                    var categoryPrefs = gameState.gameCriteriaUiModel.categoryField.field?.selected?.id.toString()
 
-                typePrefs = if (typePrefs == ANY) {
-                    DEFAULT
-                } else {
-                    when (typePrefs) {
-                        ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
-                        else -> {
-                            BOOLEAN_TYPE
+                    typePrefs = if (typePrefs == ANY) {
+                        DEFAULT
+                    } else {
+                        when (typePrefs) {
+                            ID_MULTIPLE_TYPE -> MULTIPLE_TYPE
+                            else -> {
+                                BOOLEAN_TYPE
+                            }
                         }
                     }
-                }
-
-                difficultyPrefs = if (difficultyPrefs == ANY) {
-                    DEFAULT
-                } else {
-                    when (difficultyPrefs) {
-                        ID_EASY_DIFFICULT -> EASY_DIFFICULT
-                        ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
-                        else -> {
-                            HARD_DIFFICULT
+                    difficultyPrefs = if (difficultyPrefs == ANY) {
+                        DEFAULT
+                    } else {
+                        when (difficultyPrefs) {
+                            ID_EASY_DIFFICULT -> EASY_DIFFICULT
+                            ID_MEDIUM_DIFFICULT -> MEDIUM_DIFFICULT
+                            else -> {
+                                HARD_DIFFICULT
+                            }
                         }
                     }
-                }
+                    if (categoryPrefs == ANY) {
+                        categoryPrefs = DEFAULT
+                    }
+                    val newQuestions = async {
+                        triviaRepository.getQuestions(
+                            difficulty = difficultyPrefs,
+                            type = typePrefs,
+                            category = categoryPrefs
+                        )
+                            .map { triviaQuestion ->
 
-                if (categoryPrefs == ANY) {
-                    categoryPrefs = DEFAULT
-                }
-                val newQuestions = async {
-                    triviaRepository.getQuestions(
-                        difficulty = difficultyPrefs,
-                        type = typePrefs,
-                        category = categoryPrefs
-                    )
-                        .map { triviaQuestion ->
+                                val randomOptions = answerOptions(triviaQuestion)
 
-                            val randomOptions = answerOptions(triviaQuestion)
+                                val fromApi = triviaQuestion.question
+                                val textFromHtmlFromApi = HtmlCompat.fromHtml(fromApi, HtmlCompat.FROM_HTML_MODE_LEGACY)
 
-                            val fromApi = triviaQuestion.question
-                            val textFromHtmlFromApi = HtmlCompat.fromHtml(fromApi, HtmlCompat.FROM_HTML_MODE_LEGACY)
-
-                            Question(
-                                type = triviaQuestion.type,
-                                difficulty = triviaQuestion.difficulty,
-                                category = triviaQuestion.category,
-                                question = textFromHtmlFromApi.toString(),
-                                correctAnswer = triviaQuestion.correctAnswer,
-                                incorrectAnswer = triviaQuestion.incorrectAnswer,
-                                answerOptions = randomOptions
-                            )
-                        }
-                }.await()
-                while(newQuestions.isEmpty()) {
-                    delay(1)
-                }
-                val questions = newQuestions.toMutableList()
-                val currentQuestion = questions.last()
-                questions.remove(currentQuestion)
-                val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
-                    AnswerOptionsUiModel(
-                        id = answerOption.id,
-                        option = answerOption.answer,
-                    )
-                }
-                dispatch(Actions.UpdateQuestion(Triple(questions, currentQuestion, optionsAnswers)))
+                                Question(
+                                    type = triviaQuestion.type,
+                                    difficulty = triviaQuestion.difficulty,
+                                    category = triviaQuestion.category,
+                                    question = textFromHtmlFromApi.toString(),
+                                    correctAnswer = triviaQuestion.correctAnswer,
+                                    incorrectAnswer = triviaQuestion.incorrectAnswer,
+                                    answerOptions = randomOptions
+                                )
+                            }
+                    }.await()
+                    while(newQuestions.isEmpty()) {
+                        delay(1)
+                    }
+                    val questions = newQuestions.toMutableList()
+                    val currentQuestion = questions.last()
+                    questions.remove(currentQuestion)
+                    val optionsAnswers = currentQuestion.answerOptions.map { answerOption ->
+                        AnswerOptionsUiModel(
+                            id = answerOption.id,
+                            option = answerOption.answer,
+                        )
+                    }
+                    dispatch(Actions.UpdateQuestion(Triple(questions, currentQuestion, optionsAnswers)))
+                } ?: run { dispatch(NetworkActions.NetworkWarning) }
             } else {
                 val triple = getQuestionsFromCache(gameState)
                 dispatch(Actions.UpdateQuestion(Triple(triple.first, triple.second, triple.third)))
