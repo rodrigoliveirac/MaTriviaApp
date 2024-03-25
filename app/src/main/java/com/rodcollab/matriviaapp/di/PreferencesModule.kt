@@ -2,8 +2,8 @@ package com.rodcollab.matriviaapp.di
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
-import com.rodcollab.matriviaapp.game.domain.preferences.PreferencesImpl
+import com.rodcollab.matriviaapp.data.preferences.Preferences
+import com.rodcollab.matriviaapp.data.preferences.PreferencesImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

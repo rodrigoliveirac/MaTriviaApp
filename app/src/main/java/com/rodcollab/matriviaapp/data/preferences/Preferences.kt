@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.game.domain.preferences
+package com.rodcollab.matriviaapp.data.preferences
 
 interface Preferences {
     suspend fun updateGamePrefs(type: Int,difficulty: Int, category: Int)

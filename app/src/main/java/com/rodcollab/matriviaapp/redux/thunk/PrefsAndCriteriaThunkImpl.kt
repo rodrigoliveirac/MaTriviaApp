@@ -6,7 +6,7 @@ import com.rodcollab.matriviaapp.data.model.QuestionDifficulty
 import com.rodcollab.matriviaapp.data.model.QuestionType
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.game.GameState
-import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
+import com.rodcollab.matriviaapp.data.preferences.Preferences
 import com.rodcollab.matriviaapp.game.ui.model.CategoryFieldModel
 import com.rodcollab.matriviaapp.game.ui.model.DifficultyFieldModel
 import com.rodcollab.matriviaapp.game.ui.model.DropDownMenu

@@ -5,7 +5,7 @@ import com.rodcollab.matriviaapp.data.model.TriviaQuestion
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.GameState
-import com.rodcollab.matriviaapp.game.domain.Question
+import com.rodcollab.matriviaapp.game.ui.model.Question
 import com.rodcollab.matriviaapp.redux.actions.NetworkActions
 import com.rodcollab.matriviaapp.redux.actions.PlayingGameActions
 import com.rodcollab.matriviaapp.game.ui.model.AnswerOptionUiModel
@@ -122,7 +122,7 @@ class GetQuestionThunkImpl(
 
     private fun getQuestionsFromCache(
         gameState: GameState,
-    ): Triple<List<Question>,Question,List<AnswerOptionUiModel>> {
+    ): Triple<List<Question>, Question,List<AnswerOptionUiModel>> {
         val questions = gameState.questions.toMutableList()
         val currentQuestion = questions.last()
         questions.remove(currentQuestion)

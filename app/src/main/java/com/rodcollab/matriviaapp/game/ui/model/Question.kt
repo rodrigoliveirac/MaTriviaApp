@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.game.domain
+package com.rodcollab.matriviaapp.game.ui.model
 
 import com.rodcollab.matriviaapp.redux.thunk.AnswerOption
 import java.util.UUID

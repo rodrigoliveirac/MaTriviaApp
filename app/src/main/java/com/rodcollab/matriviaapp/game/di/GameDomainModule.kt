@@ -3,7 +3,7 @@ package com.rodcollab.matriviaapp.game.di
 import com.rodcollab.matriviaapp.data.repository.RankingRepository
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
-import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
+import com.rodcollab.matriviaapp.data.preferences.Preferences
 import com.rodcollab.matriviaapp.redux.thunk.GameThunks
 import com.rodcollab.matriviaapp.redux.thunk.GetQuestionThunkImpl
 import com.rodcollab.matriviaapp.redux.thunk.GetRankingThunkImpl

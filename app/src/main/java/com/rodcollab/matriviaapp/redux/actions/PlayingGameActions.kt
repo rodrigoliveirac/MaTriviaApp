@@ -1,7 +1,7 @@
 package com.rodcollab.matriviaapp.redux.actions
 
 import com.rodcollab.matriviaapp.data.model.RankingExternal
-import com.rodcollab.matriviaapp.game.domain.Question
+import com.rodcollab.matriviaapp.game.ui.model.Question
 import com.rodcollab.matriviaapp.game.ui.model.AnswerOptionUiModel
 import com.rodcollab.matriviaapp.game.GameStatus
 

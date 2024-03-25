@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.game.domain.preferences
+package com.rodcollab.matriviaapp.data.preferences
 
 import android.content.SharedPreferences
 import kotlinx.coroutines.Dispatchers
