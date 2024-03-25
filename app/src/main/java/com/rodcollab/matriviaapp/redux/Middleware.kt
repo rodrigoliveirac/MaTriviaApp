@@ -40,10 +40,6 @@ fun uiMiddleware(
         is MenuGameActions.StartGame -> {
             dispatch(timerThunk.getTimerThunk())
         }
-        is MenuGameActions.GiveUpGameConfirm -> {
-            dispatch(timerThunk.stopTimerJob())
-            dispatch(rankingThunks.getRanking())
-        }
         //======================
         // PLAYING GAME ACTIONS
         //======================
