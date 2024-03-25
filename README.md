@@ -7,7 +7,8 @@
 ## Sumário
 * [Funcionalidades](#funcionalidades)
 * [Entendendo Redux no MaTriviaApp](#redux)
-* [Funções Assíncronas - Thunks](##thunks)
+* [Funções Assíncronas - Thunks](#thunks)
+* [O papel do ViewModel](#triviagamevm)
  
 # Funcionalidades
 - [x] O usuário pode selecionar a dificuldade do jogo: Fácil, Média ou Difícil.
@@ -110,7 +111,7 @@ sealed interface TimerActions {
 
 }
 
-## Thunks
+# Thunks
 
 **GetQuestionThunkImpl.kt** 
 
@@ -429,7 +430,7 @@ class TimerThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext) : TimerThu
 
 }
 
-## O papel do ViewModel
+# TriviaGameVm
 
 O nosso TriviaGameVm, viewmodel, é responsável por lidar com eventos inesperados relacionados ao ciclo de vida da Activity. Além disso, ele intermedia as ações da UI com o nosso Store<GameState>.
 
