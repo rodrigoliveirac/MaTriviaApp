@@ -22,18 +22,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.redux.actions.MenuGameActions
 import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
-import com.rodcollab.matriviaapp.game.viewmodel.DifficultyFieldModel
-import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
-import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.MenuGameAction
-import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
+import com.rodcollab.matriviaapp.game.ui.model.DifficultyFieldModel
+import com.rodcollab.matriviaapp.game.ui.model.DropDownMenu
 
 @Composable
 fun DifficultyField(
     modifier: Modifier,
     difficultyField: DropDownMenu<DifficultyFieldModel?>,
-    onActionField: (MenuGameAction) -> Unit
+    onActionField: (MenuGameActions) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
@@ -47,7 +45,7 @@ fun DifficultyField(
                         it.size.width.toDp()
                     }
                 }, value = stringResource(id = field.selected.difficulty), onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(ExpandMenuAction.DifficultyField) }) {
+                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenuDifficultyField) }) {
                         Icon(painter = if(difficultyField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -57,13 +55,13 @@ fun DifficultyField(
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
                     .width(it), expanded = difficultyField.expanded, onDismissRequest = { onActionField(
-                    ExpandMenuAction.DifficultyField)  }) {
+                    MenuGameActions.ExpandMenuDifficultyField)  }) {
                     difficultyField.field.options.map { difficulty ->
                         DropdownMenuItem(text = {
                             Text(text = stringResource(id = difficulty.difficulty))
                         },
                             onClick = {
-                                onActionField(SelectCriteriaAction.DifficultyField(difficulty))
+                                onActionField(MenuGameActions.OnSelectDifficultyField(difficulty))
                             })
                     }
                 }

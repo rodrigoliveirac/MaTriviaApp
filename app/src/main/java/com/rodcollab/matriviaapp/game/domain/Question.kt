@@ -1,6 +1,6 @@
 package com.rodcollab.matriviaapp.game.domain
 
-import com.rodcollab.matriviaapp.game.domain.use_case.AnswerOption
+import com.rodcollab.matriviaapp.redux.thunk.AnswerOption
 import java.util.UUID
 
 data class Question(

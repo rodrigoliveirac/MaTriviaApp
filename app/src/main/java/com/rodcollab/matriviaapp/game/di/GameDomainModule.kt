@@ -4,15 +4,11 @@ import com.rodcollab.matriviaapp.data.repository.RankingRepository
 import com.rodcollab.matriviaapp.data.repository.TriviaRepository
 import com.rodcollab.matriviaapp.di.DefaultDispatcher
 import com.rodcollab.matriviaapp.game.domain.preferences.Preferences
-import com.rodcollab.matriviaapp.game.domain.use_case.GameUseCases
-import com.rodcollab.matriviaapp.game.domain.use_case.GetQuestionImpl
-import com.rodcollab.matriviaapp.game.domain.use_case.GetRankingImpl
-import com.rodcollab.matriviaapp.game.domain.use_case.InsertRankingImpl
-import com.rodcollab.matriviaapp.game.domain.use_case.QuestionValidatorImpl
-import com.rodcollab.matriviaapp.game.domain.use_case.ShowPrefsAndCriteriaImpl
-import com.rodcollab.matriviaapp.redux.PrefsAndCriteriaThunkImpl
-import com.rodcollab.matriviaapp.redux.TimerThunk
-import com.rodcollab.matriviaapp.redux.TimerThunkImpl
+import com.rodcollab.matriviaapp.redux.thunk.GameThunks
+import com.rodcollab.matriviaapp.redux.thunk.GetQuestionThunkImpl
+import com.rodcollab.matriviaapp.redux.thunk.GetRankingThunkImpl
+import com.rodcollab.matriviaapp.redux.thunk.PrefsAndCriteriaThunkImpl
+import com.rodcollab.matriviaapp.redux.thunk.TimerThunkImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,10 +27,10 @@ object GameDomainModule {
         rankingRepository: RankingRepository,
         repository: TriviaRepository,
         preferences: Preferences
-    ): GameUseCases {
-        return GameUseCases(
-            getQuestion = GetQuestionImpl(dispatcher,repository),
-            getRanking = GetRankingImpl(dispatcher,rankingRepository),
+    ): GameThunks {
+        return GameThunks(
+            getQuestion = GetQuestionThunkImpl(dispatcher,repository),
+            getRanking = GetRankingThunkImpl(dispatcher,rankingRepository),
             getCategories = PrefsAndCriteriaThunkImpl(dispatcher,preferences,repository),
             timerThunk = TimerThunkImpl(dispatcher)
         )

@@ -24,12 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodcollab.matriviaapp.R
 import com.rodcollab.matriviaapp.data.model.RankingExternal
-import com.rodcollab.matriviaapp.game.intent.EndGameActions
-import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
-import com.rodcollab.matriviaapp.redux.GameState
+import com.rodcollab.matriviaapp.game.GameState
+import com.rodcollab.matriviaapp.redux.actions.EndGameActions
 
 @Composable
-fun EndOfGameDialog(uiState:GameState, onEndGameActions:(EndGameActions) -> Unit) {
+fun EndOfGameDialog(uiState: GameState, onEndGameActions:(EndGameActions) -> Unit) {
         WidgetDialog(modifier = Modifier.clip(RoundedCornerShape(16.dp))) {
             Text(style = MaterialTheme.typography.headlineMedium,modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -55,7 +54,8 @@ fun EndOfGameDialog(uiState:GameState, onEndGameActions:(EndGameActions) -> Unit
                 Text(text = stringResource(R.string.play_again))
             }
             Spacer(modifier = Modifier.size(4.dp))
-            OutlinedButton(modifier = Modifier.fillMaxWidth(),onClick = { onEndGameActions(EndGameActions.BackToGameSetup) }) {
+            OutlinedButton(modifier = Modifier.fillMaxWidth(),onClick = { onEndGameActions(
+                EndGameActions.BackToGameSetup) }) {
                 Text(text = stringResource(R.string.back_to_game_setup))
             }
         }

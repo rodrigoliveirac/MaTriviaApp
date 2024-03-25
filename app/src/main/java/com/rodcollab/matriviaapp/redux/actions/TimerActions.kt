@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.game.intent
+package com.rodcollab.matriviaapp.redux.actions
 
 sealed interface TimerActions {
     data object Update : TimerActions
