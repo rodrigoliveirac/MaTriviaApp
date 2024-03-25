@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -25,12 +24,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
-import com.rodcollab.matriviaapp.game.intent.GamePlayingActions
-import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameState
-import com.rodcollab.matriviaapp.redux.GameState
+import com.rodcollab.matriviaapp.game.GameState
+import com.rodcollab.matriviaapp.redux.actions.PlayingGameActions
 
 @Composable
-fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: GameState, onActionGamePlaying:(GamePlayingActions) -> Unit) {
+fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: GameState, onActionGamePlaying:(PlayingGameActions) -> Unit) {
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(paddingValues)) {
@@ -87,7 +85,7 @@ fun PlayingScreen(paddingValues: PaddingValues, timeState:Int?, uiState: GameSta
                                 selected = it.selected,
                                 onClick = {
                                     onActionGamePlaying(
-                                        GamePlayingActions.SelectOption(optionId = it.id)
+                                        PlayingGameActions.CheckAnswer(answerId = it.id)
                                     )
                                 })
                             Spacer(modifier = Modifier.size(8.dp))

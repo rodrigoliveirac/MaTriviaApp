@@ -22,18 +22,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.redux.actions.MenuGameActions
 import com.rodcollab.matriviaapp.game.theme.outlineFieldsCriteriaDisabled
-import com.rodcollab.matriviaapp.game.viewmodel.DropDownMenu
-import com.rodcollab.matriviaapp.game.viewmodel.TypeFieldModel
-import com.rodcollab.matriviaapp.redux.ExpandMenuAction
-import com.rodcollab.matriviaapp.redux.MenuGameAction
-import com.rodcollab.matriviaapp.redux.SelectCriteriaAction
+import com.rodcollab.matriviaapp.game.ui.model.DropDownMenu
+import com.rodcollab.matriviaapp.game.ui.model.TypeFieldModel
 
 @Composable
 fun TypeField(
     modifier: Modifier,
     typeField: DropDownMenu<TypeFieldModel?>,
-    onActionField: (MenuGameAction) -> Unit
+    onActionField: (MenuGameActions) -> Unit
 ) {
     var width by remember { mutableStateOf<Dp?>(null) }
     val density = LocalDensity.current
@@ -47,7 +45,7 @@ fun TypeField(
                         it.size.width.toDp()
                     }
                 }, value = stringResource(id = field.selected.type), onValueChange = { }, readOnly = true, trailingIcon = {
-                    IconButton(onClick = { onActionField(ExpandMenuAction.TypeField) }) {
+                    IconButton(onClick = { onActionField(MenuGameActions.ExpandMenuTypeField) }) {
                         Icon(painter = if(typeField.expanded) painterResource(id = R.drawable.arrow_up) else painterResource(id = R.drawable.arrow_drop_down), contentDescription = null)
                     }
                 }, label = {
@@ -57,13 +55,13 @@ fun TypeField(
                 DropdownMenu(modifier = Modifier
                     .heightIn(max = 120.dp)
                     .width(it), expanded = typeField.expanded, onDismissRequest = { onActionField(
-                    ExpandMenuAction.TypeField) }) {
+                    MenuGameActions.ExpandMenuTypeField) }) {
                     typeField.field.options.map { type ->
                         DropdownMenuItem(text = {
                             Text(text = stringResource(id = type.type))
                         },
                             onClick = {
-                                onActionField(SelectCriteriaAction.TypeField(type))
+                                onActionField(MenuGameActions.OnSelectTypeField(type))
                             })
                     }
                 }

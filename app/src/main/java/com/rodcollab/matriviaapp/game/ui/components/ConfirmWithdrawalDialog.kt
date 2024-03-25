@@ -18,10 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
-import com.rodcollab.matriviaapp.game.intent.GiveUpGameActions
+import com.rodcollab.matriviaapp.redux.actions.PlayingGameActions
 
 @Composable
-fun ConfirmWithdrawalDialog(onGiveUpGameActions: (GiveUpGameActions)-> Unit) {
+fun ConfirmWithdrawalDialog(onGiveUpGameActions: (PlayingGameActions)-> Unit) {
     WidgetDialog(modifier = Modifier.clip(RoundedCornerShape(16.dp))) {
         Text(style = MaterialTheme.typography.titleLarge,modifier = Modifier
             .align(Alignment.CenterHorizontally)
@@ -33,12 +33,12 @@ fun ConfirmWithdrawalDialog(onGiveUpGameActions: (GiveUpGameActions)-> Unit) {
             .background(Color.LightGray)
             .fillMaxWidth())
         Spacer(modifier = Modifier.size(24.dp))
-        Button(modifier = Modifier.fillMaxWidth(),onClick = { onGiveUpGameActions(GiveUpGameActions.Confirm) }) {
+        Button(modifier = Modifier.fillMaxWidth(),onClick = { onGiveUpGameActions(PlayingGameActions.GiveUpGameConfirm) }) {
             Text(text = stringResource(R.string.yes))
         }
         Spacer(modifier = Modifier.size(8.dp))
         OutlinedButton(modifier = Modifier.fillMaxWidth(),onClick = { onGiveUpGameActions(
-            GiveUpGameActions.GoBack) }) {
+            PlayingGameActions.GiveUpGameGoBack) }) {
             Text(text = stringResource(R.string.no))
         }
     }

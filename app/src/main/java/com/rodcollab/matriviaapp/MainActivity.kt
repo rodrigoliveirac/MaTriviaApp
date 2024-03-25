@@ -6,7 +6,6 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -18,7 +17,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.rodcollab.matriviaapp.game.theme.MaTriviaAppTheme
 import com.rodcollab.matriviaapp.game.ui.TriviaGameScreen
-import com.rodcollab.matriviaapp.game.viewmodel.TriviaGameVm
+import com.rodcollab.matriviaapp.game.TriviaGameVm
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

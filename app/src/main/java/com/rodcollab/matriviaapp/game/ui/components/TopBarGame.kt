@@ -18,10 +18,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rodcollab.matriviaapp.R
+import com.rodcollab.matriviaapp.redux.actions.PlayingGameActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarGame(onHeightValue:(Dp)-> Unit, onTopBarAskToGiveUp: () -> Unit) {
+fun TopBarGame(onHeightValue:(Dp)-> Unit, onTopBarAskToGiveUp: (PlayingGameActions) -> Unit) {
     val density = LocalDensity.current
     CenterAlignedTopAppBar(modifier = Modifier
         .shadow(elevation = 6.dp)
@@ -32,7 +33,7 @@ fun TopBarGame(onHeightValue:(Dp)-> Unit, onTopBarAskToGiveUp: () -> Unit) {
         },title = {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(textAlign = TextAlign.Center, modifier = Modifier.weight(1f),text = stringResource(id = R.string.app_name))
-            IconButton(onClick = { onTopBarAskToGiveUp() }) {
+            IconButton(onClick = { onTopBarAskToGiveUp(PlayingGameActions.OnTopBarGiveUp) }) {
                 Icon(painter = painterResource(id = R.drawable.baseline_exit_to_app_24), contentDescription = null)
             }
         }

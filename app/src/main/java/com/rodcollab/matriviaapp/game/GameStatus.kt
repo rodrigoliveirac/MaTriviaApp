@@ -1,4 +1,4 @@
-package com.rodcollab.matriviaapp.game.viewmodel
+package com.rodcollab.matriviaapp.game
 
 enum class GameStatus {
     SETUP,
