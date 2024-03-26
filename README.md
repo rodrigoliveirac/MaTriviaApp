@@ -14,6 +14,22 @@
 * [O papel do ViewModel](#triviagamevm)
 * [Pré-visualizações](#previews)
 
+# Funcionalidades
+- [x] O usuário pode selecionar a dificuldade do jogo: Fácil, Média ou Difícil.
+- [x] O usuário pode selecionar a categoria de perguntas que o mesmo deseja responder.
+- [x] O usuário pode selecionar o tipo de pergunta que o mesmo pode responder: se **múltipla escolha**, **verdadeiro e falso** ou **ambos os tipos**.
+- [x] O usuário pode responder somente 1 pergunta por vez.
+- [x] As perguntas são escolhidas de forma aleatória, de acordo com os critérios pré-selecionados anteriormente.
+- [x] Em casos de perguntas de múltipla escolha, as opções são apresentadas e o usuário pode dentre as opções.
+- [x] Em casos de perguntas de verdadeiro ou falso, as opções são apresentadas como (Verdadeiro ou falso) e o usuário pode escolher dentre as opções.
+- [x] Se o usuário errar a pergunta, uma mensagem é apresentada sobre o erro, a resposta certa é destacada e o jogo é encerrado.
+- [x] Se o usuário acertar a pergunta, uma mensagem de sucesso é apresentada, a resposta é destacada e uma nova pergunta é apresentada.
+- [x] O usuário pode responder quantas perguntas quiser até errar. O quantitativo de perguntas respondidas é mostrado.
+- [x] O usuário tem apenas 10 segundos para responder cada pergunta.
+- [x] O usuário pode desistir do jogo. O usuário pode confirmar se deseja desistir do jogo.
+- [x] No final, o quantitativo de acertos do usuário é mostrado.
+- [x] Um ranking com os 10 últimos jogos é apresentado (do maior para o menor).
+- [x] Verificação de conexão com a Internet.
 
 # GameState
 
@@ -119,24 +135,6 @@ fun uiMiddleware(
     }
 }
 ```
-
- 
-# Funcionalidades
-- [x] O usuário pode selecionar a dificuldade do jogo: Fácil, Média ou Difícil.
-- [x] O usuário pode selecionar a categoria de perguntas que o mesmo deseja responder.
-- [x] O usuário pode selecionar o tipo de pergunta que o mesmo pode responder: se **múltipla escolha**, **verdadeiro e falso** ou **ambos os tipos**.
-- [x] O usuário pode responder somente 1 pergunta por vez.
-- [x] As perguntas são escolhidas de forma aleatória, de acordo com os critérios pré-selecionados anteriormente.
-- [x] Em casos de perguntas de múltipla escolha, as opções são apresentadas e o usuário pode dentre as opções.
-- [x] Em casos de perguntas de verdadeiro ou falso, as opções são apresentadas como (Verdadeiro ou falso) e o usuário pode escolher dentre as opções.
-- [x] Se o usuário errar a pergunta, uma mensagem é apresentada sobre o erro, a resposta certa é destacada e o jogo é encerrado.
-- [x] Se o usuário acertar a pergunta, uma mensagem de sucesso é apresentada, a resposta é destacada e uma nova pergunta é apresentada.
-- [x] O usuário pode responder quantas perguntas quiser até errar. O quantitativo de perguntas respondidas é mostrado.
-- [x] O usuário tem apenas 10 segundos para responder cada pergunta.
-- [x] O usuário pode desistir do jogo. O usuário pode confirmar se deseja desistir do jogo.
-- [x] No final, o quantitativo de acertos do usuário é mostrado.
-- [x] Um ranking com os 10 últimos jogos é apresentado (do maior para o menor).
-- [x] Verificação de conexão com a Internet.
 
 # Redux
 <img width="204" alt="Screenshot 2024-03-25 at 19 53 54" src="https://github.com/rodrigoliveirac/MaTriviaApp/assets/72306040/c275ff32-f877-4d7d-a83b-921c30e0852a">
