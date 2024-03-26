@@ -569,34 +569,34 @@ class TriviaGameVm @Inject constructor(
     private val gameUseCases: GameThunks
 ) : ViewModel() {
 
-    val gameState = createStore(reducer, GameState(), applyMiddleware(
+    val gameStore = createStore(reducer, GameState(), applyMiddleware(
         createThunkMiddleware(), uiMiddleware(gameUseCases.timerThunk, gameUseCases.getRanking,gameUseCases.getQuestion,gameUseCases.getCategories)))
 
     fun onMenuGameAction(menuGameAction: MenuGameActions) {
-        gameState.dispatch(menuGameAction)
+        gameStore.dispatch(menuGameAction)
     }
 
     fun onGamePlayingAction(gamePlayingActions: PlayingGameActions) {
-        gameState.dispatch(gamePlayingActions)
+        gameStore.dispatch(gamePlayingActions)
     }
 
     fun onEndGameActions(endGameAction: EndGameActions) {
-        gameState.dispatch(endGameAction)
+        gameStore.dispatch(endGameAction)
     }
 
     fun changeNetworkState(state: Boolean?) {
-        gameState.dispatch(NetworkActions.ChangeNetworkState(state))
+        gameStore.dispatch(NetworkActions.ChangeNetworkState(state))
         Log.d("networkState", state?.let { "available" } ?: run { "unavailable" })
     }
 
     fun onResume() {
-        if(gameState.state.gameStatus == GameStatus.SETUP) {
-            gameState.dispatch(MenuGameActions.FetchCriteriaFields)
+        if(gameStore.state.gameStatus == GameStatus.SETUP) {
+            gameStore.dispatch(MenuGameActions.FetchCriteriaFields)
         }
     }
 
     fun tryNetworkConnection() {
-        gameState.dispatch(NetworkActions.TryAgain)
+        gameStore.dispatch(NetworkActions.TryAgain)
     }
 }
 ```
