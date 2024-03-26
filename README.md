@@ -4,7 +4,7 @@
  - A arquitetura foi baseada em MVI. E você pode checar a branch `redux-arch` para conferir a arquitetura utilizando REDUX.
 - Na branch `Main`você vai encontrar o projeto sem REDUX.
 
-## Sumário
+## Sumário (com REDUX)
 * [Funcionalidades](#funcionalidades)
 * [Estrutura responsável pelo Estado do jogo](#gamestate)
 * [Reducer](#reducer)
