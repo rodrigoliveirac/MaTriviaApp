@@ -42,9 +42,9 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
     val snackbarHostState = remember { SnackbarHostState() }
     var heightTopBar by remember { mutableStateOf<Dp>(0.dp) }
 
-    var game by remember { mutableStateOf(viewModel.gameState.state) }
+    var game by remember { mutableStateOf(viewModel.gameStore.state) }
 
-    viewModel.gameState.subscribe { game = viewModel.gameState.state }
+    viewModel.gameStore.subscribe { game = viewModel.gameStore.state }
 
     game.networkWarning?.let {
         WidgetDialog(Modifier.fillMaxSize()) {
@@ -92,7 +92,7 @@ fun TriviaGameScreen(viewModel: TriviaGameVm) {
     }
 
     game.isCorrectOrIncorrect?.let { isCorrectAnswer ->
-        LaunchSnackBar(isCorrectAnswer,game.timeIsFinished, snackbarHostState) { viewModel.gameState.dispatch(
+        LaunchSnackBar(isCorrectAnswer,game.timeIsFinished, snackbarHostState) { viewModel.gameStore.dispatch(
             PlayingGameActions.ContinueGame(isCorrectAnswer)
         ) }
     }
