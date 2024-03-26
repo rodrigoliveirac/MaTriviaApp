@@ -12,6 +12,7 @@
 * [Entendendo Redux no MaTriviaApp](#redux)
 * [Funções Assíncronas - Thunks](#thunks)
 * [O papel do ViewModel](#triviagamevm)
+* [Pré-visualizações](#previews)
 
 
 # GameState
@@ -154,7 +155,7 @@ sealed interface EndGameActions {
     
 }
 ```
-===================
+
 **MenuGameActions.kt** 
 
 Responsável por todas as interações quando a variável `gameStatus` == GameStatus.SETUP
@@ -179,7 +180,7 @@ sealed interface MenuGameActions {
         MenuGameActions
 }
 ```
-===================
+
 **NetworkActions.kt** 
 
 Responsável por todas as interações quando a variável `networkWarning` != null
@@ -193,7 +194,7 @@ sealed interface NetworkActions {
 
 }
 ```
-===================
+
 **PlayingGameActions.kt** 
 
 Responsável por todas as interações quando a variável `gameStatus` == GameStatus.STARTED
@@ -216,7 +217,7 @@ sealed interface PlayingGameActions {
     data object GiveUpGameGoBack : PlayingGameActions
 }
 ```
-===================
+
 **TimerActions.kt** 
 
 Responsável pelas interações que lidam com o estado do tempo
