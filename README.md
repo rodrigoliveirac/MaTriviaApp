@@ -6,9 +6,119 @@
 
 ## Sumário
 * [Funcionalidades](#funcionalidades)
+* [Estrutura responsável pelo Estado do jogo](#gamestate)
+* [Reducer](#reducer)
+* [Middleware](#middleware)
 * [Entendendo Redux no MaTriviaApp](#redux)
 * [Funções Assíncronas - Thunks](#thunks)
 * [O papel do ViewModel](#triviagamevm)
+
+
+# GameState
+
+```
+data class GameState(
+    val questions: List<Question> = listOf(),
+    val gameStatus: GameStatus = GameStatus.SETUP,
+    val gameCriteriaUiModel: GameCriteriaUiModel = GameCriteriaUiModel(),
+    val correctAnswers: Int = 0,
+    val isCorrectOrIncorrect: Boolean? = null,
+    val currentQuestion: Question? = null,
+    val optionsAnswers: List<AnswerOptionUiModel> = listOf(),
+    val timeIsFinished: Boolean = false,
+    val confirmWithdrawal: Boolean = false,
+    val disableSelection: Boolean = false,
+    val timeState: Int? = null,
+    val ranking: List<RankingExternal> = listOf(),
+    val networkIsActive: Boolean? = null,
+    val networkWarning: Boolean? = null
+) {
+    val numberQuestion = correctAnswers + 1
+}
+```
+
+# Reducer
+
+Função pura responsável por lidar com a gerenciamento do `GameState` 
+
+Ações que mudam o `networkWarning` e `networkWarning` -  Exemplo
+
+```
+val reducer: Reducer<GameState> = { state, action ->
+    when (action) {
+    
+        //======================
+        // NETWORK GAME ACTIONS
+        //======================
+        is NetworkActions.ChangeNetworkState -> {
+            state.copy(networkIsActive = action.network)
+        }
+        is NetworkActions.NetworkWarning -> {
+            state.copy(networkWarning = true)
+        }
+        else -> {
+            state.copy()
+        }
+    }
+}
+```
+
+# MiddleWare
+
+Responsável para disparar as funções assíncronas
+
+Enquanto `gameStatus` == GameStatus.STARTED - Exemplos
+
+```
+fun uiMiddleware(
+    timerThunk: TimerThunk,
+    rankingThunks: GetRankingThunk,
+    questionThunks: GetQuestionThunk,
+    categoryThunks: PrefsAndCriteriaThunk
+) = middleware<GameState> { store, next, action ->
+    next(action)
+    val dispatch = store.dispatch
+    when (action) {
+        //======================
+        // PLAYING GAME ACTIONS
+        //======================
+        is PlayingGameActions.CheckAnswer -> {
+            store.dispatch(PlayingGameActions.DisableSelection(action.answerId))
+            when (action.answerId == CORRECT_ANSWER_ID) {
+                true -> {
+                    store.dispatch(PlayingGameActions.HandleCorrectAnswer)
+                    store.dispatch(timerThunk.stopTimerJob())
+                }
+
+                else -> {
+                    store.dispatch(PlayingGameActions.HandleIncorrectAnswer)
+                    store.dispatch(timerThunk.stopTimerJob())
+                }
+            }
+        }
+        is PlayingGameActions.ContinueGame -> {
+            when (action.isCorrectOrIncorrect) {
+                true -> {
+                    dispatch(timerThunk.getTimerThunk())
+                }
+
+                else -> {
+                    dispatch(rankingThunks.getRanking())
+                }
+            }
+        }
+        is PlayingGameActions.GetNewQuestion -> {
+            dispatch(questionThunks.getQuestionThunk())
+        }
+        is PlayingGameActions.GiveUpGameConfirm -> {
+            dispatch(timerThunk.stopTimerJob())
+            dispatch(rankingThunks.getRanking())
+        }
+        (...)
+    }
+}
+```
+
  
 # Funcionalidades
 - [x] O usuário pode selecionar a dificuldade do jogo: Fácil, Média ou Difícil.
@@ -36,17 +146,20 @@
 
 Responsável por todas as interações quando a variável `gameStatus` == GameStatus.END
 
+```
 sealed interface EndGameActions {
 
     data object PlayAgain : EndGameActions
     data object BackToGameSetup : EndGameActions
     
 }
+```
 ===================
 **MenuGameActions.kt** 
 
 Responsável por todas as interações quando a variável `gameStatus` == GameStatus.SETUP
 
+```
 sealed interface MenuGameActions {
 
     data object ExpandMenuCategoryField : MenuGameActions
@@ -65,11 +178,13 @@ sealed interface MenuGameActions {
     data object FetchCriteriaFields :
         MenuGameActions
 }
+```
 ===================
 **NetworkActions.kt** 
 
 Responsável por todas as interações quando a variável `networkWarning` != null
 
+```
 sealed interface NetworkActions {
 
     data object NetworkWarning : NetworkActions
@@ -77,11 +192,13 @@ sealed interface NetworkActions {
     data class ChangeNetworkState(val network: Boolean?) : NetworkActions
 
 }
+```
 ===================
 **PlayingGameActions.kt** 
 
 Responsável por todas as interações quando a variável `gameStatus` == GameStatus.STARTED
 
+```
 sealed interface PlayingGameActions {
 
     data class UpdateQuestion(val triple: Triple<List<Question>, Question, List<AnswerOptionUiModel>>) :
@@ -98,11 +215,13 @@ sealed interface PlayingGameActions {
     data object GiveUpGameConfirm : PlayingGameActions
     data object GiveUpGameGoBack : PlayingGameActions
 }
+```
 ===================
 **TimerActions.kt** 
 
 Responsável pelas interações que lidam com o estado do tempo
 
+```
 sealed interface TimerActions {
 
     data object Update : TimerActions
@@ -110,6 +229,7 @@ sealed interface TimerActions {
     data object TimerThunkDispatcher : TimerActions
 
 }
+```
 
 # Thunks
 
@@ -117,6 +237,7 @@ sealed interface TimerActions {
 
 Thunk responsável pela função assíncrona que busca novas questões.
 
+```
 class GetQuestionThunkImpl(
     @DefaultDispatcher dispatcher: CoroutineDispatcher,
     private val triviaRepository: TriviaRepository
@@ -278,11 +399,13 @@ class GetQuestionThunkImpl(
 
     }
 }
+```
 
 **GetRankingThunkImpl.kt** 
 
 Thunk responsável pela função assíncrona que busca o top 10 dos últimos jogos e inserir o resultado do último jogo.
 
+```
 class GetRankingThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext, private val rankingRepository: RankingRepository) :
     GetRankingThunk {
 
@@ -304,12 +427,13 @@ class GetRankingThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext, priva
         }
     }
 }
-
+```
 
 **PrefsAndCriteriaThunkImpl.kt** 
 
 Thunk responsável pela função assíncrona que busca o valor dos campos de critérios do jogo de acordo com as preferências salvas ou salvar novas preferências.
 
+```
 class PrefsAndCriteriaThunkImpl(
     networkContext: CoroutineDispatcher,
     private val preferences: Preferences,
@@ -396,11 +520,14 @@ class PrefsAndCriteriaThunkImpl(
         private const val defaultValue = "Any Category"
     }
 }
+```
+
 
 **TimerThunkImpl.kt**
 
 Thunk responsável pelas funções assíncronas que lidam com o início do tempo ou sua pausa.
 
+```
 class TimerThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext) : TimerThunk, CoroutineScope {
 
     override val coroutineContext: CoroutineContext = dispatcher + Job()
@@ -429,11 +556,13 @@ class TimerThunkImpl(@DefaultDispatcher dispatcher: CoroutineContext) : TimerThu
     }
 
 }
+```
 
 # TriviaGameVm
 
 O nosso TriviaGameVm, viewmodel, é responsável por lidar com eventos inesperados relacionados ao ciclo de vida da Activity. Além disso, ele intermedia as ações da UI com o nosso Store<GameState>.
 
+```
 @HiltViewModel
 class TriviaGameVm @Inject constructor(
     private val gameUseCases: GameThunks
@@ -469,7 +598,7 @@ class TriviaGameVm @Inject constructor(
         gameState.dispatch(NetworkActions.TryAgain)
     }
 }
-
+```
 
 ## Previews
 - Configurações do jogo
